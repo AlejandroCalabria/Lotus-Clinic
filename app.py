@@ -17,6 +17,25 @@ import hashlib
 import os
 from werkzeug.utils import secure_filename
 from functools import wraps
+
+# Mapeamento de categorias IA para especialidades médicas
+CATEGORIA_PARA_ESPECIALIDADE = {
+    'Respiratory': 'Respiratório',
+    'Cardiovascular': 'Cardiologista',
+    'Gastrointestinal': 'Gastrointestinal',
+    'Neurological': 'Neurologia',
+    'Musculoskeletal': 'Ortopedia',
+    'Dermatological': 'Dermatologia',
+    'Endocrine_Metabolic': 'Endocrinologia',
+    'Renal_Urological': 'Urologia',
+    'Gynecological_Obstetric': 'Ginecologia',
+    'Ophthalmological': 'Oftalmologia',
+    'ENT': 'Otorrinolaringologia',
+    'Hematological_Oncological': 'Hematologia',
+    'Psychiatric': 'Psiquiatria',
+    'Other': 'Clínico Geral'
+}
+
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -35,33 +54,22 @@ app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # ========== BANCO DE DADOS ==========
-def init_db():
-    """Inicializa o banco de dados SQLite"""
-    conn = sqlite3.connect('lotus_clinic.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL,
-            cpf TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            telefone TEXT NOT NULL,
-            cep TEXT NOT NULL,
-            data_nascimento DATE NOT NULL,
-            senha_hash TEXT NOT NULL,
-            avatar TEXT,
-            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            ultimo_login TIMESTAMP
-        )
-    ''')
-    
-    conn.commit()
-    conn.close()
-    logger.info("✅ Banco de dados inicializado!")
+import mysql.connector
+from mysql.connector import Error
 
-# Inicializar DB ao iniciar aplicação
-init_db()
+def get_db_connection():
+    """Conectar ao banco MySQL"""
+    try:
+        conn = mysql.connector.connect(
+            host='localhost',
+            database='clinica_med',
+            user='root',  # ← MUDAR PARA SEU USUÁRIO
+            password='@IamAStudent2010'  # ← MUDAR PARA SUA SENHA
+        )
+        return conn
+    except Error as e:
+        logger.error(f"❌ Erro ao conectar MySQL: {e}")
+        return None
 
 def hash_senha(senha):
     """Gera hash SHA256 da senha"""
@@ -735,38 +743,48 @@ def register():
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 avatar_filename = filename
         
-        # Salvar no banco
-        conn = sqlite3.connect('lotus_clinic.db')
+        # Salvar no banco MySQL
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         try:
+            # Gerar código único de usuário
+            cursor.execute('SELECT MAX(CAST(SUBSTRING(cod_usuario, 2) AS UNSIGNED)) FROM usuario')
+            result = cursor.fetchone()
+            last_id = result[0] if result[0] else 0
+            novo_cod = f'U{str(last_id + 1).zfill(3)}'
+            
             cursor.execute('''
-                INSERT INTO usuarios (nome, cpf, email, telefone, cep, data_nascimento, senha_hash, avatar)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (nome, cpf, email, telefone, cep, data_nascimento, hash_senha(senha), avatar_filename))
+                INSERT INTO usuario (cod_usuario, CPF, Nome_user, telefone, email, 
+                                   sexo, data_nasc, senha, foto, cod_cargo)
+                VALUES (%s, %s, %s, %s, %s, 'NB', %s, %s, %s, 'C002')
+            ''', (novo_cod, cpf, nome, telefone, email, data_nascimento, 
+                  hash_senha(senha), avatar_filename))
             
             conn.commit()
-            user_id = cursor.lastrowid
             
             # Fazer login automático
-            session['user_id'] = user_id
+            session['user_id'] = novo_cod
             session['user_nome'] = nome
             session['user_email'] = email
+            session['cod_cargo'] = 'C002'
             
             return jsonify({
                 'success': True,
                 'message': 'Cadastro realizado com sucesso!',
-                'redirect': '/triagem'
+                'redirect': '/perfil-paciente'
             }), 201
             
-        except sqlite3.IntegrityError as e:
-            if 'cpf' in str(e):
+        except mysql.connector.IntegrityError as e:
+            error_msg = str(e)
+            if 'CPF' in error_msg:
                 return jsonify({'success': False, 'error': 'CPF já cadastrado'}), 400
-            elif 'email' in str(e):
+            elif 'email' in error_msg:
                 return jsonify({'success': False, 'error': 'Email já cadastrado'}), 400
             else:
                 return jsonify({'success': False, 'error': 'Erro ao cadastrar usuário'}), 400
         finally:
+            cursor.close()
             conn.close()
             
     except Exception as e:
@@ -775,82 +793,1019 @@ def register():
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    """Fazer login"""
     try:
         data = request.get_json()
         email = data.get('email')
         senha = data.get('senha')
         
-        if not email or not senha:
-            return jsonify({'success': False, 'error': 'Email e senha são obrigatórios'}), 400
+        # LOG 1: O que chegou na requisição
+        logger.info(f"📨 Tentativa de login - Email: {email}")
         
-        conn = sqlite3.connect('lotus_clinic.db')
-        cursor = conn.cursor()
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
         
         cursor.execute('''
-            SELECT id, nome, email, senha_hash, avatar 
-            FROM usuarios 
-            WHERE email = ?
+            SELECT u.cod_usuario, u.Nome_user, u.email, u.senha, 
+                   c.cargo_nome, c.cod_cargo
+            FROM usuario u
+            JOIN cargo c ON u.cod_cargo = c.cod_cargo
+            WHERE u.email = %s
         ''', (email,))
         
         user = cursor.fetchone()
         
-        if user and user[3] == hash_senha(senha):
-            # Login bem-sucedido
-            session['user_id'] = user[0]
-            session['user_nome'] = user[1]
-            session['user_email'] = user[2]
-            session['user_avatar'] = user[4]
+        # LOG 2: Usuário encontrado?
+        if user:
+            logger.info(f"✅ Usuário encontrado: {user['Nome_user']} ({user['cargo_nome']})")
+            logger.info(f"🔐 Senha digitada: {senha}")
+            logger.info(f"🔐 Hash digitado: {hash_senha(senha)}")
+            logger.info(f"🔐 Hash no banco: {user['senha']}")
+            logger.info(f"🔐 Senhas batem? {user['senha'] == hash_senha(senha)}")
+        else:
+            logger.warning(f"❌ Usuário NÃO encontrado para email: {email}")
+        
+        cursor.close()
+        conn.close()
+        
+        if user and user['senha'] == hash_senha(senha):
+            session['user_id'] = user['cod_usuario']
+            session['user_nome'] = user['Nome_user']
+            session['user_email'] = user['email']
+            session['user_cargo'] = user['cargo_nome']
+            session['cod_cargo'] = user['cod_cargo']
             
-            # Atualizar último login
-            cursor.execute('''
-                UPDATE usuarios 
-                SET ultimo_login = CURRENT_TIMESTAMP 
-                WHERE id = ?
-            ''', (user[0],))
-            conn.commit()
-            
-            conn.close()
+            # LOG 3: Redirecionamento
+            if user['cod_cargo'] == 'C001':  # Médico
+                redirect_url = '/perfil-medico'
+                logger.info(f"🏥 Redirecionando MÉDICO para: {redirect_url}")
+            elif user['cod_cargo'] == 'C002':  # Paciente
+                redirect_url = '/perfil-paciente'
+                logger.info(f"🧑 Redirecionando PACIENTE para: {redirect_url}")
+            elif user['cod_cargo'] == 'C003':  # Atendente/Triagem
+                redirect_url = '/perfil-atendente'  # ✅ CORRETO!
+                logger.info(f"📋 Redirecionando ATENDENTE para: {redirect_url}")
+            elif user['cod_cargo'] == 'C005':  # Atendente/Triagem
+                redirect_url = '/triagem'  # ✅ CORRETO!
+                logger.info(f"📋 Redirecionando PARA O TESTE DA IA para: {redirect_url}")
+            else:
+                redirect_url = '/perfil-paciente'
+                logger.info(f"❓ Redirecionando OUTRO para: {redirect_url}")
             
             return jsonify({
                 'success': True,
-                'message': 'Login realizado com sucesso!',
-                'user': {
-                    'nome': user[1],
-                    'email': user[2],
-                    'avatar': user[4]
-                },
-                'redirect': '/triagem'
-            }), 200
+                'message': 'Login realizado!',
+                'redirect': redirect_url,
+                'user_type': user['cargo_nome']
+            })
         else:
-            conn.close()
+            logger.warning(f"❌ Senha incorreta para: {email}")
             return jsonify({'success': False, 'error': 'Email ou senha inválidos'}), 401
             
     except Exception as e:
-        logger.error(f"Erro no login: {str(e)}")
+        logger.error(f"💥 Erro no login: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/logout', methods=['POST'])
-def logout():
-    """Fazer logout"""
-    session.clear()
-    return jsonify({'success': True, 'message': 'Logout realizado com sucesso'}), 200
+# ========== ROTAS DE SOLICITAÇÃO DE CONSULTA ==========
+# ========== ROTAS DO ATENDENTE ==========
 
-@app.route('/api/current-user', methods=['GET'])
+@app.route('/perfil-atendente')
 @login_required
-def current_user():
-    """Retornar dados do usuário logado"""
-    return jsonify({
-        'success': True,
-        'user': {
-            'id': session.get('user_id'),
-            'nome': session.get('user_nome'),
-            'email': session.get('user_email'),
-            'avatar': session.get('user_avatar')
-        }
-    }), 200
+def perfil_atendente():
+    """Perfil do atendente com solicitações pendentes"""
+    if session.get('cod_cargo') != 'C003':
+        return redirect('/login')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Buscar dados do atendente
+    cursor.execute('''
+        SELECT u.Nome_user, u.email, u.foto
+        FROM usuario u
+        WHERE u.cod_usuario = %s
+    ''', (session['user_id'],))
+    
+    atendente = cursor.fetchone()
+    if atendente and atendente.get('foto'):
+        atendente['foto'] = f"/static/uploads/avatars/{atendente['foto']}"
+    
+    # Buscar solicitações pendentes (Aguardando Triagem) - QUERY MELHORADA
+    cursor.execute('''
+        SELECT 
+            c.cod_consulta, 
+            c.data_consulta as data_preferencial, 
+            TIME_FORMAT(c.horario_preferencial_paciente, '%H:%i') as horario_preferencial_paciente,
+            c.sintomas_descritos, 
+            u.Nome_user as paciente, 
+            u.telefone,
+            u.email as email_paciente,
+            un.nome_unidade, 
+            un.cod_unidade,
+            un.endereco as endereco_unidade,
+            DATE_FORMAT(c.data_consulta, '%d/%m/%Y') as data_formatada
+        FROM consulta c
+        JOIN usuario u ON c.cod_usuario = u.cod_usuario
+        JOIN unidade un ON c.cod_unidade = un.cod_unidade
+        WHERE c.status_consulta = 'Aguardando Triagem'
+        ORDER BY c.data_consulta ASC, c.horario_preferencial_paciente ASC
+    ''')
+    solicitacoes = cursor.fetchall()
+    
+    # Buscar estatísticas - NOVO
+    cursor.execute('''
+        SELECT 
+            COUNT(*) as total_pendentes,
+            COUNT(CASE WHEN DATE(c.data_consulta) = CURDATE() THEN 1 END) as hoje,
+            COUNT(CASE WHEN DATE(c.data_consulta) = CURDATE() + INTERVAL 1 DAY THEN 1 END) as amanha
+        FROM consulta c
+        WHERE c.status_consulta = 'Aguardando Triagem'
+    ''')
+    stats = cursor.fetchone()
+    
+    # Buscar enfermeiros ativos
+    cursor.execute('''
+        SELECT 
+            e.cod_enfermeiro, 
+            u.Nome_user as nome, 
+            e.COREN,
+            e.especialidade,
+            e.anos_experiencia
+        FROM enfermeiro e
+        JOIN usuario u ON e.cod_usuario = u.cod_usuario
+        WHERE e.atividade = TRUE
+        ORDER BY u.Nome_user
+    ''')
+    enfermeiros = cursor.fetchall()
+    
+    # Buscar unidades ativas - NOVO
+    cursor.execute('SELECT * FROM unidade WHERE ativo = TRUE ORDER BY nome_unidade')
+    unidades = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('perfil-atendente.html', 
+                         atendente=atendente,
+                         solicitacoes=solicitacoes,
+                         enfermeiros=enfermeiros,
+                         unidades=unidades,
+                         stats=stats)
 
+
+@app.route('/api/salas-disponiveis', methods=['GET'])
+@login_required
+def get_salas_disponiveis():
+    """Buscar salas disponíveis por unidade e data"""
+    try:
+        cod_unidade = request.args.get('cod_unidade')
+        data_triagem = request.args.get('data_triagem')
+        hora_triagem = request.args.get('hora_triagem')
+        
+        if not all([cod_unidade, data_triagem, hora_triagem]):
+            return jsonify({'success': False, 'error': 'Parâmetros incompletos'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Buscar salas de triagem da unidade que NÃO estão ocupadas naquele horário
+        cursor.execute('''
+            SELECT s.cod_sala, s.numero_sala, s.tipo_sala
+            FROM sala s
+            WHERE s.cod_unidade = %s 
+            AND s.tipo_sala = 'Triagem' 
+            AND s.ativo = TRUE
+            AND s.cod_sala NOT IN (
+                SELECT c.cod_sala 
+                FROM consulta c 
+                WHERE c.data_consulta = %s 
+                AND c.hora_consulta = %s
+                AND c.cod_sala IS NOT NULL
+                AND c.status_consulta NOT IN ('Cancelada', 'Concluída')
+            )
+            ORDER BY s.numero_sala
+        ''', (cod_unidade, data_triagem, hora_triagem))
+        
+        salas = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'salas': salas,
+            'total': len(salas)
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar salas: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/verificar-disponibilidade-enfermeiro', methods=['GET'])
+@login_required
+def verificar_disponibilidade_enfermeiro():
+    """Verificar se enfermeiro está disponível em determinado horário"""
+    try:
+        cod_enfermeiro = request.args.get('cod_enfermeiro')
+        data_triagem = request.args.get('data_triagem')
+        hora_triagem = request.args.get('hora_triagem')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Verificar se enfermeiro já tem triagem marcada neste horário
+        cursor.execute('''
+            SELECT COUNT(*) as total
+            FROM consulta c
+            JOIN triagem t ON c.cod_consulta = t.cod_consulta
+            WHERE t.cod_enfermeiro = %s
+            AND c.data_consulta = %s
+            AND c.hora_consulta = %s
+            AND c.status_consulta NOT IN ('Cancelada', 'Concluída')
+        ''', (cod_enfermeiro, data_triagem, hora_triagem))
+        
+        result = cursor.fetchone()
+        disponivel = result['total'] == 0
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'disponivel': disponivel
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao verificar disponibilidade: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/agendar-triagem', methods=['POST'])
+@login_required
+def agendar_triagem():
+    """Atendente agenda a triagem com enfermeiro, sala e horário"""
+    try:
+        if session.get('cod_cargo') != 'C003':
+            return jsonify({'success': False, 'error': 'Acesso restrito a atendentes'}), 403
+        
+        data = request.get_json()
+        
+        cod_consulta = data.get('cod_consulta')
+        cod_enfermeiro = data.get('cod_enfermeiro')
+        cod_sala = data.get('cod_sala')
+        data_triagem = data.get('data_triagem')
+        hora_triagem = data.get('hora_triagem')
+        observacoes = data.get('observacoes', '')
+        
+        # Validações
+        if not all([cod_consulta, cod_enfermeiro, cod_sala, data_triagem, hora_triagem]):
+            return jsonify({'success': False, 'error': 'Todos os campos são obrigatórios'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Verificar se consulta existe e está aguardando triagem
+        cursor.execute('''
+            SELECT cod_usuario, cod_unidade
+            FROM consulta 
+            WHERE cod_consulta = %s 
+            AND status_consulta = 'Aguardando Triagem'
+        ''', (cod_consulta,))
+        
+        consulta_info = cursor.fetchone()
+        if not consulta_info:
+            return jsonify({'success': False, 'error': 'Consulta não encontrada ou já processada'}), 404
+        
+        cod_paciente = consulta_info['cod_usuario']
+        
+        # Verificar se sala está disponível
+        cursor.execute('''
+            SELECT COUNT(*) as ocupada
+            FROM consulta
+            WHERE cod_sala = %s
+            AND data_consulta = %s
+            AND hora_consulta = %s
+            AND status_consulta NOT IN ('Cancelada', 'Concluída')
+        ''', (cod_sala, data_triagem, hora_triagem))
+        
+        if cursor.fetchone()['ocupada'] > 0:
+            return jsonify({'success': False, 'error': 'Sala já ocupada neste horário'}), 400
+        
+        # Verificar se enfermeiro está disponível
+        cursor.execute('''
+            SELECT COUNT(*) as ocupado
+            FROM consulta c
+            JOIN triagem t ON c.cod_consulta = t.cod_consulta
+            WHERE t.cod_enfermeiro = %s
+            AND c.data_consulta = %s
+            AND c.hora_consulta = %s
+            AND c.status_consulta NOT IN ('Cancelada', 'Concluída')
+        ''', (cod_enfermeiro, data_triagem, hora_triagem))
+        
+        if cursor.fetchone()['ocupado'] > 0:
+            return jsonify({'success': False, 'error': 'Enfermeiro já tem triagem neste horário'}), 400
+        
+        # ✅ CORREÇÃO AQUI: usar 'Confirmada' ao invés de 'Triagem Confirmada'
+        cursor.execute('''
+            UPDATE consulta 
+            SET 
+                data_consulta = %s, 
+                hora_consulta = %s, 
+                cod_sala = %s,
+                status_consulta = 'Confirmada'
+            WHERE cod_consulta = %s
+        ''', (data_triagem, hora_triagem, cod_sala, cod_consulta))
+        
+        # Gerar código de triagem
+        cursor.execute('SELECT MAX(CAST(SUBSTRING(cod_triagem, 2) AS UNSIGNED)) FROM triagem')
+        result = cursor.fetchone()
+        last_id = list(result.values())[0] if result and list(result.values())[0] else 0
+        novo_cod_triagem = f'T{str(last_id + 1).zfill(3)}'
+        
+        # Criar registro na tabela triagem
+        cursor.execute('''
+            INSERT INTO triagem 
+            (cod_triagem, cod_consulta, sintomas_relatados, nivel_urgencia, 
+             observacoes_triagem, cod_atendente, cod_enfermeiro)
+            VALUES (%s, %s, 
+                (SELECT sintomas_descritos FROM consulta WHERE cod_consulta = %s), 
+                'Rotina', %s, %s, %s)
+        ''', (novo_cod_triagem, cod_consulta, cod_consulta, observacoes, 
+              session['user_id'], cod_enfermeiro))
+        
+        # Buscar informações para as notificações
+        cursor.execute('''
+            SELECT u.Nome_user as paciente, s.numero_sala, un.nome_unidade
+            FROM consulta c
+            JOIN usuario u ON c.cod_usuario = u.cod_usuario
+            JOIN sala s ON c.cod_sala = s.cod_sala
+            JOIN unidade un ON s.cod_unidade = un.cod_unidade
+            WHERE c.cod_consulta = %s
+        ''', (cod_consulta,))
+        
+        info = cursor.fetchone()
+        
+        cursor.execute('''
+            SELECT u.Nome_user as enfermeiro
+            FROM enfermeiro e
+            JOIN usuario u ON e.cod_usuario = u.cod_usuario
+            WHERE e.cod_enfermeiro = %s
+        ''', (cod_enfermeiro,))
+        
+        enfermeiro_info = cursor.fetchone()
+        
+        # Criar notificação para o PACIENTE
+        cursor.execute('''
+            INSERT INTO notificacao 
+            (cod_notificacao, tipo_notificacao, titulo, mensagem, cod_usuario_destino, cod_consulta)
+            SELECT 
+                CONCAT('N', LPAD(COALESCE(MAX(CAST(SUBSTRING(cod_notificacao, 2) AS UNSIGNED)), 0) + 1, 3, '0')),
+                'Triagem Agendada',
+                'Triagem Confirmada',
+                CONCAT('Sua triagem foi agendada para ', DATE_FORMAT(%s, '%%d/%%m/%%Y'), ' às ', %s, 
+                       ' na sala ', %s, ' - ', %s, '. Enfermeiro(a): ', %s),
+                %s,
+                %s
+            FROM notificacao
+        ''', (data_triagem, hora_triagem, info['numero_sala'], info['nome_unidade'], 
+              enfermeiro_info['enfermeiro'], cod_paciente, cod_consulta))
+        
+        # Criar notificação para o ENFERMEIRO
+        cursor.execute('SELECT cod_usuario FROM enfermeiro WHERE cod_enfermeiro = %s', (cod_enfermeiro,))
+        cod_usuario_enfermeiro = cursor.fetchone()['cod_usuario']
+        
+        cursor.execute('''
+            INSERT INTO notificacao 
+            (cod_notificacao, tipo_notificacao, titulo, mensagem, cod_usuario_destino, cod_consulta)
+            SELECT 
+                CONCAT('N', LPAD(COALESCE(MAX(CAST(SUBSTRING(cod_notificacao, 2) AS UNSIGNED)), 0) + 1, 3, '0')),
+                'Triagem Agendada',
+                'Nova Triagem Atribuída',
+                CONCAT('Você foi designado para realizar triagem do(a) paciente ', %s, 
+                       ' em ', DATE_FORMAT(%s, '%%d/%%m/%%Y'), ' às ', %s, 
+                       ' - Sala ', %s, ' (', %s, ')'),
+                %s,
+                %s
+            FROM notificacao
+        ''', (info['paciente'], data_triagem, hora_triagem, info['numero_sala'], 
+              info['nome_unidade'], cod_usuario_enfermeiro, cod_consulta))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Triagem agendada com sucesso!',
+            'cod_triagem': novo_cod_triagem,
+            'detalhes': {
+                'paciente': info['paciente'],
+                'data': data_triagem,
+                'hora': hora_triagem,
+                'sala': info['numero_sala'],
+                'unidade': info['nome_unidade'],
+                'enfermeiro': enfermeiro_info['enfermeiro']
+            }
+        }), 201
+        
+    except Exception as e:
+        logger.error(f"Erro ao agendar triagem: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/solicitacao/cancelar', methods=['POST'])
+@login_required
+def cancelar_solicitacao():
+    """Cancelar solicitação de consulta"""
+    try:
+        data = request.get_json()
+        cod_consulta = data.get('cod_consulta')
+        motivo = data.get('motivo', 'Cancelado pela recepção')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Verificar se consulta existe
+        cursor.execute('''
+            SELECT cod_usuario 
+            FROM consulta 
+            WHERE cod_consulta = %s 
+            AND status_consulta = 'Aguardando Triagem'
+        ''', (cod_consulta,))
+        
+        consulta = cursor.fetchone()
+        if not consulta:
+            return jsonify({'success': False, 'error': 'Consulta não encontrada'}), 404
+        
+        # Atualizar status
+        cursor.execute('''
+            UPDATE consulta 
+            SET status_consulta = 'Cancelada'
+            WHERE cod_consulta = %s
+        ''', (cod_consulta,))
+        
+        # Notificar paciente
+        cursor.execute('''
+            INSERT INTO notificacao 
+            (cod_notificacao, tipo_notificacao, titulo, mensagem, cod_usuario_destino, cod_consulta)
+            SELECT 
+                CONCAT('N', LPAD(COALESCE(MAX(CAST(SUBSTRING(cod_notificacao, 2) AS UNSIGNED)), 0) + 1, 3, '0')),
+                'Geral',
+                'Solicitação Cancelada',
+                CONCAT('Sua solicitação de consulta foi cancelada. Motivo: ', %s),
+                %s,
+                %s
+            FROM notificacao
+        ''', (motivo, consulta['cod_usuario'], cod_consulta))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Solicitação cancelada'})
+        
+    except Exception as e:
+        logger.error(f"Erro ao cancelar solicitação: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/solicitar-consulta')
+@login_required
+def solicitar_consulta_page():
+    """Página para solicitar consulta"""
+    if session.get('cod_cargo') != 'C002':  # Apenas pacientes
+        return redirect('/login')
+    
+    # Buscar unidades disponíveis
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute('SELECT * FROM unidade WHERE ativo = TRUE')
+    unidades = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('solicitar-consulta.html', unidades=unidades)
+
+# ========== ADICIONAR NO app.py APÓS AS OUTRAS ROTAS DE CONSULTA ==========
+
+@app.route('/api/consulta/detalhes/<cod_consulta>', methods=['GET'])
+@login_required
+def get_consulta_detalhes(cod_consulta):
+    """Buscar TODOS os detalhes de uma consulta específica"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Query COMPLETA com TODAS as informações
+        cursor.execute('''
+            SELECT 
+                c.cod_consulta,
+                c.data_consulta,
+                c.hora_consulta,
+                c.tipo_atendimento,
+                c.status_consulta,
+                c.sintomas_descritos,
+                c.horario_preferencial_paciente,
+                c.local_consulta,
+                
+                -- Médico
+                COALESCE(u_medico.Nome_user, 'Aguardando Atribuição') as medico,
+                m.especialidade,
+                m.CRM,
+                
+                -- Unidade e Sala
+                un.nome_unidade as unidade,
+                un.endereco as endereco_unidade,
+                un.telefone as telefone_unidade,
+                s.numero_sala as sala,
+                s.tipo_sala,
+                
+                -- Convênio
+                conv.nome_convenio as convenio,
+                conv.tipo_convenio,
+                
+                -- Triagem (se existir)
+                t.cod_triagem,
+                t.data_triagem,
+                t.nivel_urgencia,
+                t.categoria_ia,
+                t.probabilidade_ia,
+                t.observacoes_triagem,
+                u_enf.Nome_user as enfermeiro,
+                e.COREN,
+                
+                -- Atendente (se tiver agendado triagem)
+                u_atend.Nome_user as atendente
+                
+            FROM consulta c
+            
+            -- Joins do médico
+            LEFT JOIN medico m ON c.cod_medico = m.cod_medico
+            LEFT JOIN usuario u_medico ON m.cod_usuario = u_medico.cod_usuario
+            
+            -- Joins da unidade e sala
+            LEFT JOIN unidade un ON c.cod_unidade = un.cod_unidade
+            LEFT JOIN sala s ON c.cod_sala = s.cod_sala
+            
+            -- Join do convênio
+            LEFT JOIN convenio conv ON c.cod_convenio = conv.cod_convenio
+            
+            -- Joins da triagem
+            LEFT JOIN triagem t ON c.cod_consulta = t.cod_consulta
+            LEFT JOIN enfermeiro e ON t.cod_enfermeiro = e.cod_enfermeiro
+            LEFT JOIN usuario u_enf ON e.cod_usuario = u_enf.cod_usuario
+            LEFT JOIN usuario u_atend ON t.cod_atendente = u_atend.cod_usuario
+            
+            WHERE c.cod_consulta = %s
+            AND c.cod_usuario = %s
+        ''', (cod_consulta, session['user_id']))
+        
+        consulta = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+        
+        if not consulta:
+            return jsonify({
+                'success': False,
+                'error': 'Consulta não encontrada ou você não tem permissão para visualizá-la'
+            }), 404
+        
+        # Formatar datas
+        if consulta['data_consulta']:
+            consulta['data_consulta'] = consulta['data_consulta'].strftime('%d/%m/%Y')
+        
+        if consulta['data_triagem']:
+            consulta['data_triagem'] = consulta['data_triagem'].strftime('%d/%m/%Y às %H:%M')
+        
+        if consulta['hora_consulta']:
+            # Converter timedelta para string formatada
+            hora = str(consulta['hora_consulta'])
+            if len(hora.split(':')) == 3:
+                h, m, s = hora.split(':')
+                consulta['hora_consulta'] = f"{h}:{m}"
+            else:
+                consulta['hora_consulta'] = hora
+        
+        if consulta['horario_preferencial_paciente']:
+            hora_pref = str(consulta['horario_preferencial_paciente'])
+            if len(hora_pref.split(':')) == 3:
+                h, m, s = hora_pref.split(':')
+                consulta['horario_preferencial_paciente'] = f"{h}:{m}"
+            else:
+                consulta['horario_preferencial_paciente'] = hora_pref
+        
+        # Organizar dados da triagem se existir
+        triagem_info = None
+        if consulta['cod_triagem']:
+            triagem_info = {
+                'cod_triagem': consulta['cod_triagem'],
+                'data_triagem': consulta['data_triagem'],
+                'nivel_urgencia': consulta['nivel_urgencia'],
+                'categoria_ia': consulta['categoria_ia'],
+                'probabilidade_ia': float(consulta['probabilidade_ia']) if consulta['probabilidade_ia'] else None,
+                'observacoes': consulta['observacoes_triagem'],
+                'enfermeiro': consulta['enfermeiro'],
+                'coren': consulta['COREN']
+            }
+        
+        # Montar resposta final
+        response_data = {
+            'cod_consulta': consulta['cod_consulta'],
+            'data_consulta': consulta['data_consulta'],
+            'hora_consulta': consulta['hora_consulta'],
+            'horario_preferencial': consulta['horario_preferencial_paciente'],
+            'tipo_atendimento': consulta['tipo_atendimento'],
+            'status_consulta': consulta['status_consulta'],
+            'sintomas_descritos': consulta['sintomas_descritos'],
+            'local_consulta': consulta['local_consulta'],
+            
+            # Profissional
+            'medico': consulta['medico'],
+            'especialidade': consulta['especialidade'],
+            'crm': consulta['CRM'],
+            
+            # Localização
+            'unidade': consulta['unidade'],
+            'endereco_unidade': consulta['endereco_unidade'],
+            'telefone_unidade': consulta['telefone_unidade'],
+            'sala': consulta['sala'],
+            'tipo_sala': consulta['tipo_sala'],
+            
+            # Convênio
+            'convenio': consulta['convenio'],
+            'tipo_convenio': str(consulta['tipo_convenio']) if consulta['tipo_convenio'] else None,
+            
+            # Triagem
+            'triagem': triagem_info,
+            
+            # Atendente
+            'atendente': consulta['atendente']
+        }
+        
+        return jsonify({
+            'success': True,
+            'consulta': response_data
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar detalhes da consulta: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ========== API DE SOLICITAR CONSULTA (POST) ==========
+# ========== API DE SOLICITAR CONSULTA (POST) ==========
+@app.route('/api/solicitar-consulta', methods=['POST'])
+@login_required
+def solicitar_consulta():
+    """Paciente solicita consulta (SEM escolher médico)"""
+    try:
+        data = request.get_json()
+        
+        sintomas_descritos = data.get('sintomas_descritos')
+        data_preferencial = data.get('data_preferencial')
+        hora_preferencial = data.get('hora_preferencial')
+        cod_unidade = data.get('cod_unidade')
+        
+        if not all([sintomas_descritos, data_preferencial, hora_preferencial, cod_unidade]):
+            return jsonify({'success': False, 'error': 'Preencha todos os campos obrigatórios'}), 400
+        
+        if len(sintomas_descritos) < 50:
+            return jsonify({'success': False, 'error': 'Descreva seus sintomas com mais detalhes (mínimo 50 caracteres)'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Gerar código
+        cursor.execute('SELECT MAX(CAST(SUBSTRING(cod_consulta, 2) AS UNSIGNED)) FROM consulta')
+        result = cursor.fetchone()
+        last_id = list(result.values())[0] if result and list(result.values())[0] else 0
+        novo_cod = f'C{str(last_id + 1).zfill(3)}'
+        
+        # Buscar convênio padrão
+        cursor.execute('SELECT cod_convenio FROM convenio LIMIT 1')
+        convenio = cursor.fetchone()
+        cod_convenio = convenio['cod_convenio'] if convenio else 'CV001'
+        
+        # ✅ CORRIGIDO: Inserir SEM médico, SEM sala, SEM hora definida
+        cursor.execute('''
+            INSERT INTO consulta 
+            (cod_consulta, data_consulta, hora_consulta, horario_preferencial_paciente,
+             tipo_atendimento, status_consulta, cod_medico, cod_usuario, cod_convenio, 
+             cod_unidade, sintomas_descritos, cod_sala)
+            VALUES (%s, %s, NULL, %s, 'Rotina', 'Aguardando Triagem', NULL, %s, %s, %s, %s, NULL)
+        ''', (novo_cod, data_preferencial, hora_preferencial, session['user_id'], 
+              cod_convenio, cod_unidade, sintomas_descritos))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Solicitação enviada! Aguarde o agendamento da triagem.',
+            'cod_consulta': novo_cod
+        }), 201
+        
+    except Exception as e:
+        logger.error(f"Erro ao solicitar consulta: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/unidades', methods=['GET'])
+def get_unidades():
+    """Retornar unidades ativas"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute('SELECT * FROM unidade WHERE ativo = TRUE')
+        unidades = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'success': True, 'unidades': unidades})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/medicos-por-especialidade', methods=['GET'])
+@login_required
+def medicos_por_especialidade():
+    """Retornar médicos de uma especialidade específica"""
+    try:
+        especialidade = request.args.get('especialidade')
+        
+        if not especialidade:
+            return jsonify({'success': False, 'error': 'Especialidade não informada'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute('''
+            SELECT m.cod_medico, u.Nome_user as nome, m.CRM as crm, 
+                   m.especialidade, m.anos_experiencia
+            FROM medico m
+            JOIN usuario u ON m.cod_usuario = u.cod_usuario
+            WHERE m.especialidade = %s AND m.atividade = TRUE
+            ORDER BY u.Nome_user
+        ''', (especialidade,))
+        
+        medicos = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'medicos': medicos,
+            'total': len(medicos)
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar médicos: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/medico-info', methods=['GET'])
+@login_required
+def medico_info():
+    """Retornar informações de um médico específico"""
+    try:
+        cod_medico = request.args.get('cod_medico')
+        
+        if not cod_medico:
+            return jsonify({'success': False, 'error': 'Código do médico não informado'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute('''
+            SELECT u.Nome_user as nome, m.CRM as crm, 
+                   m.especialidade, m.anos_experiencia
+            FROM medico m
+            JOIN usuario u ON m.cod_usuario = u.cod_usuario
+            WHERE m.cod_medico = %s
+        ''', (cod_medico,))
+        
+        medico = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+        
+        if medico:
+            return jsonify({
+                'success': True,
+                'medico': medico
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Médico não encontrado'}), 404
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar informações do médico: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/perfil-medico')
+@login_required
+def perfil_medico():
+    if session.get('cod_cargo') != 'C001':
+        return redirect('/login')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Buscar dados do médico COM A FOTO
+    cursor.execute('''
+        SELECT u.Nome_user, u.email, u.telefone, u.foto,
+               m.CRM, m.especialidade, m.anos_experiencia, m.atividade
+        FROM usuario u
+        JOIN medico m ON u.cod_usuario = m.cod_usuario
+        WHERE u.cod_usuario = %s
+    ''', (session['user_id'],))
+    
+    medico = cursor.fetchone()
+    
+    # Log para debug
+    logger.info(f"Foto do médico no banco: {medico.get('foto')}")
+    
+    # Se tem foto, ajustar o caminho
+    if medico and medico.get('foto'):
+        medico['foto'] = f"/static/uploads/avatars/{medico['foto']}"
+    
+    # Buscar consultas do dia (USAR %s)
+    cursor.execute('''
+        SELECT c.hora_consulta, u2.Nome_user as paciente, 
+               c.tipo_atendimento, c.cod_consulta
+        FROM consulta c
+        JOIN usuario u2 ON c.cod_usuario = u2.cod_usuario
+        WHERE c.cod_medico = (SELECT cod_medico FROM medico WHERE cod_usuario = %s)
+        AND c.data_consulta = CURDATE()
+        ORDER BY c.hora_consulta
+    ''', (session['user_id'],))
+    
+    consultas = cursor.fetchall()
+    
+    # Calcular estatísticas (USAR %s)
+    cursor.execute('''
+        SELECT 
+            COUNT(*) as total_consultas,
+            SUM(CASE WHEN tipo_atendimento = 'Retorno' THEN 1 ELSE 0 END) as retornos
+        FROM consulta
+        WHERE cod_medico = (SELECT cod_medico FROM medico WHERE cod_usuario = %s)
+        AND data_consulta = CURDATE()
+    ''', (session['user_id'],))
+    
+    stats = cursor.fetchone()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('perfil-medico.html', 
+                         medico=medico, 
+                         consultas=consultas, 
+                         stats=stats)
+
+
+
+@app.route('/api/consulta/cancelar', methods=['POST'])
+@login_required
+def cancelar_consulta():
+    try:
+        data = request.get_json()
+        cod_consulta = data.get('cod_consulta')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Verificar se a consulta pertence ao usuário logado
+        cursor.execute('''
+            SELECT cod_usuario, data_consulta, status_consulta 
+            FROM consulta 
+            WHERE cod_consulta = %s
+        ''', (cod_consulta,))
+        
+        consulta = cursor.fetchone()
+        
+        if not consulta:
+            return jsonify({'success': False, 'error': 'Consulta não encontrada'}), 404
+        
+        if consulta[0] != session['user_id']:
+            return jsonify({'success': False, 'error': 'Você não tem permissão para cancelar esta consulta'}), 403
+        
+        # Verificar se a data da consulta já passou
+        if consulta[1] < datetime.now().date():
+            return jsonify({'success': False, 'error': 'Não é possível cancelar consultas passadas'}), 400
+        
+        # Verificar se já está cancelada
+        if consulta[2] == 'Cancelada':
+            return jsonify({'success': False, 'error': 'Consulta já está cancelada'}), 400
+        
+        # Cancelar a consulta
+        cursor.execute('''
+            UPDATE consulta 
+            SET status_consulta = 'Cancelada'
+            WHERE cod_consulta = %s
+        ''', (cod_consulta,))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Consulta cancelada com sucesso!'})
+        
+    except Exception as e:
+        logger.error(f"Erro ao cancelar consulta: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/salas-por-unidade', methods=['GET'])
+def get_salas_por_unidade():
+    """Retornar salas de triagem de uma unidade"""
+    try:
+        cod_unidade = request.args.get('cod_unidade')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute('''
+            SELECT cod_sala, numero_sala, tipo_sala 
+            FROM sala 
+            WHERE cod_unidade = %s AND tipo_sala = 'Triagem' AND ativo = TRUE
+            ORDER BY numero_sala
+        ''', (cod_unidade,))
+        
+        salas = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'success': True, 'salas': salas})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 # ========== ROTAS DA API ==========
+@app.route('/perfil-paciente')
+@login_required
+def perfil_paciente():
+    if session.get('cod_cargo') != 'C002':
+        return redirect('/login')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Buscar dados do paciente COM A FOTO
+    cursor.execute('''
+        SELECT u.Nome_user, u.CPF, u.email, u.telefone, u.data_nasc, u.foto
+        FROM usuario u
+        WHERE u.cod_usuario = %s
+    ''', (session['user_id'],))
+    
+    paciente = cursor.fetchone()
+    
+    # Se tem foto, ajustar o caminho
+    if paciente and paciente.get('foto'):
+        paciente['foto'] = f"/static/uploads/avatars/{paciente['foto']}"
+    
+    # Buscar consultas do paciente (últimas 10) - MELHORADA
+    cursor.execute('''
+        SELECT c.cod_consulta, c.data_consulta, c.hora_consulta, 
+               c.tipo_atendimento, c.status_consulta,
+               COALESCE(u2.Nome_user, 'Aguardando Atribuição') as medico,
+               m.especialidade
+        FROM consulta c
+        LEFT JOIN medico m ON c.cod_medico = m.cod_medico
+        LEFT JOIN usuario u2 ON m.cod_usuario = u2.cod_usuario
+        WHERE c.cod_usuario = %s
+        ORDER BY c.data_consulta DESC, c.hora_consulta DESC
+        LIMIT 10
+    ''', (session['user_id'],))
+    
+    consultas = cursor.fetchall()
+    
+    # Estatísticas rápidas
+    cursor.execute('''
+        SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN status_consulta IN ('Aguardando Triagem', 'Aguardando Consulta') THEN 1 ELSE 0 END) as aguardando,
+            SUM(CASE WHEN status_consulta = 'Confirmada' THEN 1 ELSE 0 END) as confirmadas,
+            SUM(CASE WHEN status_consulta = 'Concluída' THEN 1 ELSE 0 END) as concluidas
+        FROM consulta
+        WHERE cod_usuario = %s
+    ''', (session['user_id'],))
+    
+    stats = cursor.fetchone()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('perfil-paciente.html', 
+                         paciente=paciente, 
+                         consultas=consultas,
+                         stats=stats)
+
 @app.route('/')
 def index():
     return redirect(url_for('login_page'))
@@ -902,6 +1857,34 @@ def get_symptoms():
         'total': len(symptoms_with_translation),
         'symptoms': symptoms_with_translation
     })
+
+@app.route('/api/consulta/editar', methods=['POST'])
+@login_required
+def editar_consulta():
+    try:
+        data = request.get_json()
+        cod_consulta = data.get('cod_consulta')
+        novo_horario = data.get('novo_horario')
+        novas_obs = data.get('observacoes')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+        UPDATE consulta 
+        SET hora_consulta = %s, tipo_atendimento = %s
+        WHERE cod_consulta = %s
+        ''', (novo_horario, novas_obs, cod_consulta))
+
+        cursor.close()
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Consulta atualizada!'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/categories', methods=['GET'])
 def get_categories():
@@ -965,6 +1948,133 @@ def predict():
             'success': False,
             'error': str(e)
         }), 500
+
+@app.route('/solicitar-triagem')
+@login_required
+def solicitar_triagem_page():
+    """Página para solicitar triagem"""
+    if session.get('cod_cargo') != 'C002':
+        return redirect('/login')
+    return render_template('solicitar-triagem.html')
+
+@app.route('/api/solicitar-triagem', methods=['POST'])
+@login_required
+def solicitar_triagem():
+    """API para criar solicitação de triagem"""
+    try:
+        data = request.get_json()
+        
+        data_triagem = data.get('data_triagem')
+        hora_triagem = data.get('hora_triagem')
+        sintomas = data.get('sintomas', '')
+        
+        # Validar sintomas
+        if not sintomas or len(sintomas) < 50:
+            return jsonify({
+                'success': False,
+                'error': 'Descreva seus sintomas com mais detalhes (mínimo 50 caracteres)'
+            }), 400
+        
+        # Validações de data...
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Gerar código
+        cursor.execute('SELECT MAX(CAST(SUBSTRING(cod_consulta, 2) AS UNSIGNED)) FROM consulta')
+        result = cursor.fetchone()
+        last_id = list(result.values())[0] if result and list(result.values())[0] else 0
+        novo_cod = f'C{str(last_id + 1).zfill(3)}'
+        
+        # Buscar convênio
+        cursor.execute('SELECT cod_convenio FROM convenio LIMIT 1')
+        convenio = cursor.fetchone()
+        cod_convenio = convenio['cod_convenio'] if convenio else 'CV001'
+        
+        # Inserir sem médico
+        cursor.execute('''
+        INSERT INTO consulta 
+        (cod_consulta, data_consulta, hora_consulta, tipo_atendimento, 
+        status_consulta, cod_medico, cod_usuario, cod_convenio, local_consulta, sintomas_triagem)
+        VALUES (%s, %s, %s, 'Triagem', 'Aguardando Triagem', NULL, %s, %s, 'Sala de Triagem', %s)
+    ''', (novo_cod, data_triagem, hora_triagem, session['user_id'], cod_convenio, sintomas))
+        
+        # Salvar sintomas em outra tabela ou campo
+        # (você pode adicionar um campo `sintomas_triagem` na tabela consulta)
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Triagem solicitada com sucesso!',
+            'cod_consulta': novo_cod
+        }), 201
+        
+    except Exception as e:
+        logger.error(f"Erro ao solicitar triagem: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+        
+@app.route('/api/upload-foto', methods=['POST'])
+@login_required
+def upload_foto():
+    try:
+        # Log para debug
+        logger.info(f"Upload iniciado pelo usuário: {session['user_id']}")
+        
+        if 'foto' not in request.files:
+            logger.error("Nenhum arquivo enviado")
+            return jsonify({'success': False, 'error': 'Nenhuma foto enviada'}), 400
+        
+        file = request.files['foto']
+        
+        if not file or file.filename == '':
+            logger.error("Arquivo vazio")
+            return jsonify({'success': False, 'error': 'Nenhum arquivo selecionado'}), 400
+        
+        if not allowed_file(file.filename):
+            logger.error(f"Tipo de arquivo não permitido: {file.filename}")
+            return jsonify({'success': False, 'error': 'Tipo de arquivo não permitido. Use PNG, JPG, JPEG ou GIF'}), 400
+        
+        # Gerar nome único
+        filename = secure_filename(f"{session['user_id']}_{file.filename}")
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        # Salvar arquivo
+        file.save(filepath)
+        logger.info(f"Arquivo salvo em: {filepath}")
+        
+        # Atualizar banco
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'error': 'Erro ao conectar ao banco'}), 500
+        
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE usuario SET foto = %s WHERE cod_usuario = %s
+        ''', (filename, session['user_id']))
+        
+        rows_affected = cursor.rowcount
+        logger.info(f"Linhas afetadas no UPDATE: {rows_affected}")
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        foto_url = f'/static/uploads/avatars/{filename}'
+        logger.info(f"Upload concluído! URL: {foto_url}")
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Foto atualizada com sucesso!',
+            'foto_url': foto_url
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro no upload: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/generate-pdf', methods=['POST'])
 def generate_pdf():
@@ -1128,6 +2238,337 @@ def get_diseases_by_category(category):
             'success': False,
             'error': f'Categoria "{category}" não encontrada'
         }), 404
+
+@app.route('/api/notificacoes', methods=['GET'])
+@login_required
+def get_notificacoes():
+    """Buscar notificações do usuário logado"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute('''
+            SELECT cod_notificacao, tipo_notificacao, titulo, mensagem, 
+                   lida, data_criacao, cod_consulta
+            FROM notificacao
+            WHERE cod_usuario_destino = %s
+            ORDER BY data_criacao DESC
+            LIMIT 20
+        ''', (session['user_id'],))
+        
+        notificacoes = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'notificacoes': notificacoes
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar notificações: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/notificacoes/marcar-lidas', methods=['POST'])
+@login_required
+def marcar_notificacoes_lidas():
+    """Marcar todas as notificações como lidas"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE notificacao
+            SET lida = TRUE
+            WHERE cod_usuario_destino = %s AND lida = FALSE
+        ''', (session['user_id'],))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Notificações marcadas como lidas'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+        
+@app.route('/api/medico/encaminhamentos', methods=['GET'])
+@login_required
+def get_encaminhamentos_medico():
+    """Buscar encaminhamentos de triagem para o médico"""
+    try:
+        if session.get('cod_cargo') != 'C001':
+            return jsonify({'success': False, 'error': 'Acesso restrito a médicos'}), 403
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Buscar especialidade do médico
+        cursor.execute('''
+            SELECT especialidade FROM medico 
+            WHERE cod_usuario = %s
+        ''', (session['user_id'],))
+        
+        medico_data = cursor.fetchone()
+        if not medico_data:
+            return jsonify({'success': False, 'error': 'Médico não encontrado'}), 404
+        
+        especialidade_medico = medico_data['especialidade']
+        
+        # Buscar triagens CONCLUÍDAS que correspondem à especialidade do médico
+        # e que ainda NÃO têm médico atribuído (status = Aguardando Consulta)
+        cursor.execute('''
+            SELECT 
+                c.cod_consulta,
+                u.Nome_user as paciente,
+                c.sintomas_descritos as sintomas,
+                t.categoria_ia,
+                t.probabilidade_ia as probabilidade,
+                t.data_triagem,
+                t.relatorio_ia_json
+            FROM consulta c
+            JOIN usuario u ON c.cod_usuario = u.cod_usuario
+            JOIN triagem t ON c.cod_consulta = t.cod_consulta
+            WHERE c.status_consulta = 'Aguardando Consulta'
+            AND c.cod_medico IS NULL
+            AND t.categoria_ia IS NOT NULL
+            ORDER BY t.data_triagem DESC
+            LIMIT 10
+        ''')
+        
+        encaminhamentos_raw = cursor.fetchall()
+        
+        # Filtrar apenas os que correspondem à especialidade do médico
+        encaminhamentos = []
+        for enc in encaminhamentos_raw:
+            categoria_ia = enc['categoria_ia']
+            especialidade_sugerida = CATEGORIA_PARA_ESPECIALIDADE.get(categoria_ia, 'Clínico Geral')
+            
+            # Se a especialidade bate ou se o médico é Clínico Geral (aceita tudo)
+            if especialidade_medico == especialidade_sugerida or especialidade_medico == 'Clínico Geral':
+                encaminhamentos.append({
+                    'cod_consulta': enc['cod_consulta'],
+                    'paciente': enc['paciente'],
+                    'sintomas': enc['sintomas'][:200] + '...' if len(enc['sintomas']) > 200 else enc['sintomas'],
+                    'categoria_ia': enc['categoria_ia'],
+                    'probabilidade': float(enc['probabilidade']) if enc['probabilidade'] else 0,
+                    'data_triagem': enc['data_triagem'].strftime('%d/%m/%Y %H:%M') if enc['data_triagem'] else '-',
+                    'relatorio_pdf': f'/api/relatorio-triagem/{enc["cod_consulta"]}'  # Link para baixar PDF
+                })
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'encaminhamentos': encaminhamentos
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar encaminhamentos: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/medico/aceitar-encaminhamento', methods=['POST'])
+@login_required
+def aceitar_encaminhamento():
+    """Médico aceita um encaminhamento de triagem"""
+    try:
+        if session.get('cod_cargo') != 'C001':
+            return jsonify({'success': False, 'error': 'Acesso restrito a médicos'}), 403
+        
+        data = request.get_json()
+        cod_consulta = data.get('cod_consulta')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Buscar cod_medico do usuário logado
+        cursor.execute('''
+            SELECT cod_medico FROM medico WHERE cod_usuario = %s
+        ''', (session['user_id'],))
+        
+        medico = cursor.fetchone()
+        if not medico:
+            return jsonify({'success': False, 'error': 'Médico não encontrado'}), 404
+        
+        cod_medico = medico['cod_medico']
+        
+        # Atualizar consulta: atribuir médico e mudar status
+        cursor.execute('''
+            UPDATE consulta
+            SET cod_medico = %s,
+                status_consulta = 'Confirmada'
+            WHERE cod_consulta = %s
+            AND cod_medico IS NULL
+        ''', (cod_medico, cod_consulta))
+        
+        if cursor.rowcount == 0:
+            return jsonify({'success': False, 'error': 'Consulta já foi atribuída a outro médico'}), 400
+        
+        # Criar notificação para o PACIENTE
+        cursor.execute('SELECT cod_usuario FROM consulta WHERE cod_consulta = %s', (cod_consulta,))
+        result = cursor.fetchone()
+        cod_paciente = result['cod_usuario']
+        
+        cursor.execute('''
+            INSERT INTO notificacao (cod_notificacao, tipo_notificacao, titulo, mensagem, cod_usuario_destino, cod_consulta)
+            SELECT 
+                CONCAT('N', LPAD(COALESCE(MAX(CAST(SUBSTRING(cod_notificacao, 2) AS UNSIGNED)), 0) + 1, 3, '0')),
+                'Consulta Marcada',
+                'Consulta Agendada',
+                'Sua consulta foi agendada com o médico!',
+                %s,
+                %s
+            FROM notificacao
+        ''', (cod_paciente, cod_consulta))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Encaminhamento aceito com sucesso!'
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao aceitar encaminhamento: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/salvar-resultado-triagem', methods=['POST'])
+@login_required
+def salvar_resultado_triagem():
+    """Salvar resultado da triagem (após análise da IA)"""
+    try:
+        data = request.get_json()
+        
+        cod_consulta = data.get('cod_consulta')
+        categoria_ia = data.get('categoria_ia')  # Ex: 'Cardiovascular'
+        probabilidade_ia = data.get('probabilidade_ia')  # Ex: 85.5
+        sintomas_analisados = data.get('sintomas_analisados')  # JSON dos sintomas
+        relatorio_json = data.get('relatorio_completo')  # JSON completo da análise
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Buscar cod_enfermeiro do usuário logado
+        cursor.execute('''
+            SELECT cod_enfermeiro FROM enfermeiro WHERE cod_usuario = %s
+        ''', (session['user_id'],))
+        
+        enfermeiro = cursor.fetchone()
+        cod_enfermeiro = enfermeiro['cod_enfermeiro'] if enfermeiro else None
+        
+        # Gerar código de triagem
+        cursor.execute('SELECT MAX(CAST(SUBSTRING(cod_triagem, 2) AS UNSIGNED)) FROM triagem')
+        result = cursor.fetchone()
+        last_id = list(result.values())[0] if result and list(result.values())[0] else 0
+        novo_cod_triagem = f'T{str(last_id + 1).zfill(3)}'
+        
+        # Inserir registro na tabela triagem
+        cursor.execute('''
+            INSERT INTO triagem 
+            (cod_triagem, cod_consulta, sintomas_relatados, categoria_ia, 
+             probabilidade_ia, relatorio_ia_json, nivel_urgencia, 
+             data_triagem, cod_enfermeiro)
+            VALUES (%s, %s, %s, %s, %s, %s, 'Rotina', NOW(), %s)
+        ''', (novo_cod_triagem, cod_consulta, sintomas_analisados, 
+              categoria_ia, probabilidade_ia, json.dumps(relatorio_json), cod_enfermeiro))
+        
+        # Atualizar status da consulta
+        cursor.execute('''
+            UPDATE consulta
+            SET status_consulta = 'Aguardando Consulta'
+            WHERE cod_consulta = %s
+        ''', (cod_consulta,))
+        
+        # Criar notificação para o PACIENTE
+        cursor.execute('SELECT cod_usuario FROM consulta WHERE cod_consulta = %s', (cod_consulta,))
+        result = cursor.fetchone()
+        cod_paciente = result['cod_usuario']
+        
+        cursor.execute('''
+            INSERT INTO notificacao (cod_notificacao, tipo_notificacao, titulo, mensagem, cod_usuario_destino, cod_consulta)
+            SELECT 
+                CONCAT('N', LPAD(COALESCE(MAX(CAST(SUBSTRING(cod_notificacao, 2) AS UNSIGNED)), 0) + 1, 3, '0')),
+                'Resultado Disponível',
+                'Triagem Concluída',
+                'Sua triagem foi concluída. Em breve você será encaminhado para um especialista.',
+                %s,
+                %s
+            FROM notificacao
+        ''', (cod_paciente, cod_consulta))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Resultado da triagem salvo com sucesso!',
+            'cod_triagem': novo_cod_triagem
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao salvar resultado da triagem: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/relatorio-triagem/<cod_consulta>', methods=['GET'])
+@login_required
+def download_relatorio_triagem(cod_consulta):
+    """Download do relatório PDF da triagem"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Buscar dados da triagem
+        cursor.execute('''
+            SELECT t.*, u.Nome_user as paciente, c.sintomas_descritos
+            FROM triagem t
+            JOIN consulta c ON t.cod_consulta = c.cod_consulta
+            JOIN usuario u ON c.cod_usuario = u.cod_usuario
+            WHERE t.cod_consulta = %s
+        ''', (cod_consulta,))
+        
+        triagem = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+        
+        if not triagem:
+            return jsonify({'success': False, 'error': 'Triagem não encontrada'}), 404
+        
+        # Parsear JSON do relatório
+        relatorio_json = json.loads(triagem['relatorio_ia_json']) if triagem['relatorio_ia_json'] else {}
+        
+        # Criar PDF usando a mesma estrutura do /api/generate-pdf
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch, bottomMargin=0.5*inch)
+        elements = []
+        
+        # [Adicionar aqui a mesma lógica de geração de PDF do /api/generate-pdf]
+        # Mas usando os dados de `triagem` e `relatorio_json`
+        
+        # ... (código igual ao generate_pdf, adaptando para os dados da triagem)
+        
+        doc.build(elements)
+        buffer.seek(0)
+        
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'relatorio_triagem_{cod_consulta}.pdf'
+        )
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar relatório: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # ========== INICIAR SERVIDOR ==========
 if __name__ == '__main__':

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitar Triagem - Lotus Clinic</title>
+    <link href="../static/css/bootstrap-icons.css" rel="stylesheet">
+    <link rel="icon" href="../static/images/Lotus.png" type="image/png">
+    <style>
+        :root {
+            --lotus-primary: #237261;
+            --lotus-secondary: #3da995;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            color: var(--lotus-primary);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            color: var(--lotus-primary);
+            margin-bottom: 10px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: var(--lotus-secondary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--lotus-primary);
+        }
+        .btn-voltar {
+            background: #6c757d;
+            color: white;
+            margin-bottom: 10px;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🩺 Solicitar Triagem</h1>
+        
+        <div class="alert alert-danger" id="errorAlert"></div>
+        <div class="alert alert-success" id="successAlert"></div>
+        
+        <form id="triagemForm">
+            <div class="form-group">
+                <label>Data da Triagem</label>
+                <input type="date" id="dataTriagem" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Horário Preferencial</label>
+                <input type="time" id="horaTriagem" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Descreva seus sintomas (mínimo 50 caracteres)</label>
+                <textarea id="sintomas" required placeholder="Descreva em detalhes o que você está sentindo..."></textarea>
+                <small style="color: #666;">Caracteres: <span id="charCount">0</span>/50</small>
+            </div>
+            
+            <button type="button" class="btn btn-voltar" onclick="window.location.href='/perfil-paciente'">
+                ← Voltar
+            </button>
+            <button type="submit" class="btn btn-primary">
+                ✓ Solicitar Triagem
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Contar caracteres
+        document.getElementById('sintomas').addEventListener('input', function() {
+            document.getElementById('charCount').textContent = this.value.length;
+        });
+
+        // Definir data mínima
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('dataTriagem').min = tomorrow.toISOString().split('T')[0];
+
+        // Submit
+        document.getElementById('triagemForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const sintomas = document.getElementById('sintomas').value;
+            
+            if (sintomas.length < 50) {
+                showError('Por favor, descreva seus sintomas com mais detalhes (mínimo 50 caracteres)');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/solicitar-triagem', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        data_triagem: document.getElementById('dataTriagem').value,
+                        hora_triagem: document.getElementById('horaTriagem').value,
+                        sintomas: sintomas
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('Triagem solicitada com sucesso! Redirecionando...');
+                    setTimeout(() => window.location.href = '/perfil-paciente', 2000);
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Erro ao solicitar triagem');
+            }
+        });
+        
+        function showError(msg) {
+            const alert = document.getElementById('errorAlert');
+            alert.textContent = msg;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 5000);
+        }
+        
+        function showSuccess(msg) {
+            const alert = document.getElementById('successAlert');
+            alert.textContent = msg;
+            alert.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

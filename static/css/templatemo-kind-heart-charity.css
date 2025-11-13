@@ -1921,7 +1921,7 @@ blockquote::before {
 
 
 /* ===================================
-   CADASTRO SECTION
+   CADASTRO SECTION - CORRIGIDO
 ===================================== */
 
 .cadastro-section {
@@ -1941,7 +1941,7 @@ blockquote::before {
     right: -80px;
     width: 400px;
     height: 400px;
-    background: var(--primary-color);
+    background: #5bc1ac;
     border-radius: 50%;
     opacity: 0.4;
 }
@@ -1958,37 +1958,37 @@ blockquote::before {
     opacity: 0.3;
 }
 
-.cadastro-container {
-    position: relative;
-    z-index: 2;
-}
-
-.cadastro-card {
+#cadastroForm {
     background: linear-gradient(145deg, #6b6b6b 0%, #4a4a4a 100%);
     border-radius: 20px;
     padding: 0;
     box-shadow: 0 10px 40px rgba(0,0,0,0.2);
     overflow: hidden;
     max-width: 800px;
-    margin: 0 auto;
+    margin: 3rem auto;
+    position: relative;
+    z-index: 2;
 }
 
-.cadastro-header {
+#cadastroForm::before {
+    content: 'Cadastro';
+    display: block;
     background: linear-gradient(135deg, #5a5a5a 0%, #4a4a4a 100%);
     padding: 1.2rem;
     text-align: center;
     border-bottom: 3px solid rgba(255,255,255,0.1);
-}
-
-.cadastro-header h4 {
     color: white;
-    font-size: 20px;
+    font-size: 30px;
     font-weight: 500;
     margin: 0;
 }
 
-.cadastro-body {
-    padding: 2rem 2.5rem 1.5rem;
+#cadastroForm .row {
+    padding: 0 2.5rem;
+}
+
+#cadastroForm .row:first-of-type {
+    padding-top: 2rem;
 }
 
 .avatar-upload {
@@ -2019,13 +2019,14 @@ blockquote::before {
     overflow: hidden;
     position: relative;
     border: 3px solid rgba(91, 193, 172, 0.3);
+    margin: 0 auto;
 }
 
 .avatar-preview:hover {
     background: white;
     transform: scale(1.05);
     box-shadow: 0 5px 15px rgba(91, 193, 172, 0.5);
-    border-color: var(--primary-green);
+    border-color: #5bc1ac;
 }
 
 .avatar-preview i {
@@ -2035,7 +2036,7 @@ blockquote::before {
 }
 
 .avatar-preview:hover i {
-    color: var(--primary-green);
+    color: #5bc1ac;
 }
 
 .avatar-preview img {
@@ -2047,14 +2048,27 @@ blockquote::before {
     left: 0;
 }
 
+#cadastroForm .text-center {
+    padding: 0 2.5rem 1rem;
+}
+
+#cadastroForm .loading {
+    color: white;
+}
+
+#cadastroForm #mensagem {
+    padding: 0 2.5rem;
+    margin-bottom: 1rem;
+}
+
 .cadastro-links {
     display: flex;
     justify-content: center;
-    padding: 0 1rem 1.5rem;
+    padding: 0 2.5rem 1.5rem;
 }
 
 .cadastro-links a {
-    color: var(--primary-color);
+    color: #5bc1ac;
     font-size: 12px;
     text-decoration: none;
 }
@@ -2063,13 +2077,34 @@ blockquote::before {
     text-decoration: underline;
 }
 
+/* Loading styles */
+.loading {
+    text-align: center;
+}
+
+.loading .spinner-border {
+    width: 2rem;
+    height: 2rem;
+    border-width: 0.2em;
+}
+
 /* Responsividade para Cadastro */
 @media (max-width: 768px) {
-    .cadastro-body {
-        padding: 1.5rem;
+    #cadastroForm {
+        margin: 2rem 1rem;
     }
     
-    .cadastro-card .row .col-md-6 {
-        margin-bottom: 0.5rem;
+    #cadastroForm .row {
+        padding: 0 1.5rem;
+    }
+    
+    #cadastroForm .row:first-of-type {
+        padding-top: 1.5rem;
+    }
+    
+    #cadastroForm .text-center,
+    #cadastroForm #mensagem,
+    .cadastro-links {
+        padding: 0 1.5rem 1rem;
     }
 }

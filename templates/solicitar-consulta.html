@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitar Consulta - Lotus Clinic</title>
+    <link href="../static/css/bootstrap-icons.css" rel="stylesheet">
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="../static/images/Lotus.png" type="image/png">
+    <style>
+        :root {
+            --lotus-primary: #237261;
+            --lotus-secondary: #3da995;
+            --lotus-accent: #0ec374;
+            --lotus-light: #8ba4a1;
+            --lotus-dark: #44525d;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container-consulta {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header-consulta {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header-consulta h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-consulta p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .btn-voltar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-voltar:hover {
+            background: white;
+            color: var(--lotus-primary);
+        }
+
+        .card-consulta {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: var(--lotus-primary);
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title i {
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--lotus-dark);
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--lotus-secondary);
+            box-shadow: 0 0 0 3px rgba(61, 169, 149, 0.1);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 150px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .char-counter {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .char-counter.invalid {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .char-counter.valid {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        /* Unidades Grid */
+        .unidades-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .unidade-card {
+            background: #f8f9fa;
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .unidade-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .unidade-card.selected {
+            background: var(--lotus-secondary);
+            color: white;
+            border-color: var(--lotus-primary);
+        }
+
+        .unidade-card i {
+            font-size: 40px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .unidade-nome {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .unidade-endereco {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Time Slots */
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .time-slot {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .time-slot:hover {
+            background: #e9ecef;
+        }
+
+        .time-slot.selected {
+            background: var(--lotus-secondary);
+            color: white;
+            border-color: var(--lotus-primary);
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--lotus-secondary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--lotus-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 2px solid #bee5eb;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--lotus-secondary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box i {
+            color: #2196f3;
+            margin-right: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .unidades-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .time-slots {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .card-consulta {
+                padding: 25px;
+            }
+
+            .btn-voltar {
+                position: static;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="/perfil-paciente" class="btn-voltar">
+        <i class="bi bi-arrow-left"></i> Voltar
+    </a>
+
+    <div class="container-consulta">
+        <div class="header-consulta">
+            <h1>🏥 Solicitar Consulta</h1>
+            <p>Descreva seus sintomas e escolha sua preferência de atendimento</p>
+        </div>
+
+        <div class="card-consulta">
+            <!-- Alert Messages -->
+            <div class="alert alert-danger" id="errorAlert"></div>
+            <div class="alert alert-success" id="successAlert"></div>
+            <div class="alert alert-info" id="infoAlert"></div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <i class="bi bi-info-circle"></i>
+                <strong>Como funciona:</strong> Você descreve seus sintomas, escolhe a unidade e horário preferencial. 
+                Nossa equipe irá agendar sua triagem e notificá-lo em breve!
+            </div>
+
+            <form id="consultaForm">
+                <!-- Descrição de Sintomas -->
+                <div class="form-group">
+                    <label for="sintomas">
+                        <i class="bi bi-clipboard-pulse"></i> 
+                        Descreva seus sintomas *
+                    </label>
+                    <textarea 
+                        class="form-control" 
+                        id="sintomas" 
+                        placeholder="Descreva em detalhes o que você está sentindo, quando começou, intensidade dos sintomas, etc..."
+                        required
+                        minlength="50"
+                        maxlength="2000"
+                    ></textarea>
+                    <div class="char-counter" id="charCounter">0/50 caracteres (mínimo)</div>
+                </div>
+
+                <!-- Escolha da Unidade -->
+                <div class="form-group">
+                    <label>
+                        <i class="bi bi-building"></i> 
+                        Escolha a Unidade *
+                    </label>
+                    <div class="unidades-grid" id="unidadesGrid">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Carregando unidades...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Preferencial -->
+                <div class="form-group">
+                    <label for="dataPreferencial">
+                        <i class="bi bi-calendar-check"></i> 
+                        Data Preferencial *
+                    </label>
+                    <input 
+                        type="date" 
+                        class="form-control" 
+                        id="dataPreferencial" 
+                        required
+                    >
+                    <small style="color: #666;">A data pode ser ajustada pela equipe conforme disponibilidade</small>
+                </div>
+
+                <!-- Horário Preferencial -->
+                <div class="form-group">
+                    <label>
+                        <i class="bi bi-clock"></i> 
+                        Horário Preferencial *
+                    </label>
+                    <div class="time-slots" id="timeSlots">
+                        <!-- Preenchido via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Enviando sua solicitação...</p>
+                </div>
+
+                <!-- Buttons -->
+                <div class="button-group" id="buttonGroup">
+                    <button type="submit" class="btn btn-primary" id="btnSubmit" disabled>
+                        <i class="bi bi-send"></i> Enviar Solicitação
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Estado da aplicação
+        const state = {
+            selectedUnidade: null,
+            selectedTime: null,
+            sintomas: ''
+        };
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUnidades();
+            renderTimeSlots();
+            setupEventListeners();
+            setMinDate();
+        });
+
+        // Carregar unidades
+        async function loadUnidades() {
+            try {
+                const response = await fetch('/api/unidades');
+                const data = await response.json();
+
+                const grid = document.getElementById('unidadesGrid');
+
+                if (data.success && data.unidades.length > 0) {
+                    grid.innerHTML = data.unidades.map(unidade => `
+                        <div class="unidade-card" data-unidade="${unidade.cod_unidade}">
+                            <i class="bi bi-hospital"></i>
+                            <div class="unidade-nome">${unidade.nome_unidade}</div>
+                            <div class="unidade-endereco">${unidade.endereco.split(',')[0]}</div>
+                        </div>
+                    `).join('');
+
+                    // Event listeners
+                    document.querySelectorAll('.unidade-card').forEach(card => {
+                        card.addEventListener('click', function() {
+                            document.querySelectorAll('.unidade-card').forEach(c => c.classList.remove('selected'));
+                            this.classList.add('selected');
+                            state.selectedUnidade = this.dataset.unidade;
+                            validateForm();
+                        });
+                    });
+                } else {
+                    grid.innerHTML = '<p style="text-align:center; color:#999;">Nenhuma unidade disponível</p>';
+                }
+            } catch (error) {
+                showError('Erro ao carregar unidades: ' + error.message);
+            }
+        }
+
+        // Renderizar horários
+        function renderTimeSlots() {
+            const slots = [
+                '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+                '11:00', '11:30', '14:00', '14:30', '15:00', '15:30',
+                '16:00', '16:30', '17:00', '17:30'
+            ];
+
+            const container = document.getElementById('timeSlots');
+            container.innerHTML = slots.map(time => `
+                <div class="time-slot" data-time="${time}">${time}</div>
+            `).join('');
+
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.addEventListener('click', function() {
+                    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                    this.classList.add('selected');
+                    state.selectedTime = this.dataset.time;
+                    validateForm();
+                });
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            const sintomasInput = document.getElementById('sintomas');
+            const charCounter = document.getElementById('charCounter');
+
+            sintomasInput.addEventListener('input', function() {
+                const length = this.value.length;
+                charCounter.textContent = `${length}/50 caracteres (mínimo)`;
+                
+                if (length < 50) {
+                    charCounter.classList.add('invalid');
+                    charCounter.classList.remove('valid');
+                } else {
+                    charCounter.classList.remove('invalid');
+                    charCounter.classList.add('valid');
+                }
+
+                state.sintomas = this.value;
+                validateForm();
+            });
+
+            document.getElementById('consultaForm').addEventListener('submit', handleSubmit);
+        }
+
+        // Validar formulário
+        function validateForm() {
+            const btnSubmit = document.getElementById('btnSubmit');
+            const dataPreferencial = document.getElementById('dataPreferencial').value;
+            
+            const isValid = state.selectedUnidade && 
+                           state.selectedTime && 
+                           state.sintomas.length >= 50 &&
+                           dataPreferencial;
+
+            btnSubmit.disabled = !isValid;
+        }
+
+        // Definir data mínima
+        function setMinDate() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const maxDate = new Date(today);
+            maxDate.setDate(maxDate.getDate() + 30);
+
+            const input = document.getElementById('dataPreferencial');
+            input.min = tomorrow.toISOString().split('T')[0];
+            input.max = maxDate.toISOString().split('T')[0];
+            
+            input.addEventListener('change', validateForm);
+        }
+
+        // Enviar solicitação
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            const loading = document.getElementById('loading');
+            const buttonGroup = document.getElementById('buttonGroup');
+
+            loading.style.display = 'block';
+            buttonGroup.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/solicitar-consulta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sintomas_descritos: state.sintomas,
+                        data_preferencial: document.getElementById('dataPreferencial').value,
+                        hora_preferencial: state.selectedTime,
+                        cod_unidade: state.selectedUnidade
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('✅ ' + data.message);
+                    setTimeout(() => {
+                        window.location.href = '/perfil-paciente';
+                    }, 2000);
+                } else {
+                    throw new Error(data.error || 'Erro ao enviar solicitação');
+                }
+            } catch (error) {
+                showError('❌ ' + error.message);
+                loading.style.display = 'none';
+                buttonGroup.style.display = 'flex';
+            }
+        }
+
+        // Mostrar erro
+        function showError(message) {
+            const alert = document.getElementById('errorAlert');
+            alert.textContent = message;
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), 5000);
+        }
+
+        // Mostrar sucesso
+        function showSuccess(message) {
+            const alert = document.getElementById('successAlert');
+            alert.textContent = message;
+            alert.classList.add('show');
+        }
+    </script>
+</body>
+</html>

@@ -59,69 +59,77 @@
         </div>
     </nav>
 
-    <form id="cadastroForm" enctype="multipart/form-data">
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <input type="text" class="form-control-custom" name="cpf" placeholder="insira seu CPF" required>
+    <section class="cadastro-section">
+    <div class="container">
+        <form id="cadastroForm" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <input type="text" class="form-control-custom" name="cpf" placeholder="insira seu CPF" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <input type="tel" class="form-control-custom" name="telefone" placeholder="insira seu telefone"
+                        required>
+                </div>
             </div>
-            <div class="col-md-6 mb-3">
-                <input type="tel" class="form-control-custom" name="telefone" placeholder="insira seu telefone"
-                    required>
-            </div>
-        </div>
 
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <input type="email" class="form-control-custom" name="email" placeholder="insira seu e-mail" required>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <input type="email" class="form-control-custom" name="email" placeholder="insira seu e-mail" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <input type="text" class="form-control-custom" name="cep" placeholder="insira seu CEP" required>
+                </div>
             </div>
-            <div class="col-md-6 mb-3">
-                <input type="text" class="form-control-custom" name="cep" placeholder="insira seu CEP" required>
-            </div>
-        </div>
 
-        <div class="row">
-            <div class="col-12 mb-3">
-                <input type="date" class="form-control-custom" name="dataNascimento"
-                    placeholder="insira sua data de nascimento" required>
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <input type="date" class="form-control-custom" name="dataNascimento"
+                        placeholder="insira sua data de nascimento" required>
+                </div>
             </div>
-        </div>
 
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <input type="password" class="form-control-custom" name="senha" id="senha"
-                    placeholder="insira uma senha" required>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <input type="password" class="form-control-custom" name="senha" id="senha"
+                        placeholder="insira uma senha" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <input type="password" class="form-control-custom" name="confirmaSenha" id="confirmaSenha"
+                        placeholder="Confirme sua senha" required>
+                </div>
             </div>
-            <div class="col-md-6 mb-3">
-                <input type="password" class="form-control-custom" name="confirmaSenha" id="confirmaSenha"
-                    placeholder="Confirme sua senha" required>
-            </div>
-        </div>
 
-        <div class="row align-items-center">
-            <div class="col-md-6 mb-3 d-flex justify-content-center">
-                <label for="avatarUpload" class="avatar-upload">
-                    <div class="avatar-preview" id="avatarPreview">
-                        <i class="bi bi-person-circle"></i>
-                    </div>
-                    <input type="file" id="avatarUpload" name="avatar" accept="image/*" onchange="previewAvatar(event)">
-                </label>
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-3 d-flex justify-content-center">
+                    <label for="avatarUpload" class="avatar-upload">
+                        <div class="avatar-preview" id="avatarPreview">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                        <input type="file" id="avatarUpload" name="avatar" accept="image/*">
+                    </label>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <input type="text" class="form-control-custom" name="nome" placeholder="nome" required>
+                </div>
             </div>
-            <div class="col-md-6 mb-3">
-                <input type="text" class="form-control-custom" name="nome" placeholder="nome" required>
+
+            <div class="text-center">
+                <button type="submit" class="btn-continuar" id="btnCadastro">continuar</button>
+
+                <div class="loading" style="display: none; margin-top: 15px;">
+                    <div class="spinner-border text-light" role="status"></div>
+                    <p style="color: white;">Cadastrando...</p>
+                </div>
             </div>
-        </div>
 
-        <div class="text-center">
-            <button type="submit" class="btn-continuar" id="btnCadastro">continuar</button>
-
-            <div class="loading" style="display: none; margin-top: 15px;">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p>Cadastrando...</p>
+            <div id="mensagem" class="mt-3 text-center" style="display: none;"></div>
+            
+            <div class="cadastro-links">
+                <a href="login.html">já tem uma conta? <strong>entrar</strong></a>
             </div>
-        </div>
-
-        <div id="mensagem" class="mt-3 text-center" style="display: none;"></div>
-    </form>
+        </form>
+    </div>
+</section>
 
     <footer class="site-footer">
         <div class="container">
