@@ -59,7 +59,7 @@
                     <div class="image-circles">
                         <div class="circle-wrapper">
                             <div class="doctor-circle">
-                                <img src="../static/images/slide/paciente.png" alt="Doctor" class="circle-img">
+                                <img src="../static/images/slide/doctor.png" alt="Doctor" class="circle-img">
                             </div>
                             <div class="patient-circle">
                                 <img src="../static/images/slide/paciente.png" alt="Patient" class="circle-img">
@@ -89,7 +89,7 @@
                             <div id="mensagem" class="alert" style="display: none; margin-top: 15px;"></div>
                         </div>
                         <div class="login-links">
-                            <a href="#">esqueceu sua senha?</a>
+                            <a href="/password" class="links">Esqueceu sua senha?</a>
                             <a href="/register">não é cadastrado? <strong>cadastre-se!</strong></a>
                         </div>
                     </div>
@@ -107,46 +107,36 @@
                 </div>
 
                 <div class="col-lg-4 col-md-6 col-12 mb-4">
-                    <h5 class="site-footer-title mb-3">Quick Links</h5>
+                    <h5 class="site-footer-title mb-3">Conteúdos</h5>
 
                     <ul class="footer-menu">
-                        <li class="footer-menu-item"><a href="#" class="footer-menu-link">Our Story</a></li>
-
-                        <li class="footer-menu-item"><a href="#" class="footer-menu-link">Newsroom</a></li>
-
-                        <li class="footer-menu-item"><a href="#" class="footer-menu-link">Causes</a></li>
-
-                        <li class="footer-menu-item"><a href="#" class="footer-menu-link">Become a volunteer</a></li>
-
-                        <li class="footer-menu-item"><a href="#" class="footer-menu-link">Partner with us</a></li>
+                        <li class="footer-menu-item"><a href="#" class="footer-menu-link">Sobre nós</a></li>
+                        <li class="footer-menu-item"><a href="#" class="footer-menu-link">algum erro na página?</a></li>
+                        <li class="footer-menu-item"><a href="#" class="footer-menu-link">agende sua consulta</a></li>
                     </ul>
                 </div>
 
                 <div class="col-lg-4 col-md-6 col-12 mx-auto">
-                    <h5 class="site-footer-title mb-3">Contact Infomation</h5>
+                    <h5 class="site-footer-title mb-3">Informações de contato</h5>
+
+                    <p class="text-white d-flex mb-2">
+                        <i class="bi-geo-alt me-2"></i>
+                        Rua Mariano Procópio, 37 - Rio de Janeiro, RJ
+                    </p>
 
                     <p class="text-white d-flex mb-2">
                         <i class="bi-telephone me-2"></i>
-
-                        <a href="tel: 120-240-9600" class="site-footer-link">
-                            120-240-9600
+                        <a href="tel:21997925722" class="site-footer-link">
+                            (21) 9 9792-5722
                         </a>
                     </p>
 
                     <p class="text-white d-flex">
                         <i class="bi-envelope me-2"></i>
-
-                        <a href="mailto:info@yourgmail.com" class="site-footer-link">
-                            donate@charity.org
+                        <a href="mailto:contato@lotusclinic.com" class="site-footer-link">
+                            contato@lotusclinic.com
                         </a>
                     </p>
-
-                    <p class="text-white d-flex mt-3">
-                        <i class="bi-geo-alt me-2"></i>
-                        Akershusstranda 20, 0150 Oslo, Norway
-                    </p>
-
-                    <a href="#" class="custom-btn btn mt-3">Get Direction</a>
                 </div>
             </div>
         </div>
@@ -154,10 +144,8 @@
         <div class="site-footer-bottom">
             <div class="container">
                 <div class="row">
-
                     <div class="col-lg-6 col-md-7 col-12">
-                        <p class="copyright-text mb-0">Copyright © 2036 <a href="#">Kind Heart</a> Charity Org.
-                            Design: <a href="https://templatemo.com" target="_blank">TemplateMo</a></p>
+                        <p class="copyright-text mb-0">Copyright © 2025 <a href="#">Lotus Clinic</a></p>
                     </div>
 
                     <div class="col-lg-6 col-md-5 col-12 d-flex justify-content-center align-items-center mx-auto">
@@ -165,49 +153,44 @@
                             <li class="social-icon-item">
                                 <a href="#" class="social-icon-link bi-twitter"></a>
                             </li>
-
                             <li class="social-icon-item">
                                 <a href="#" class="social-icon-link bi-facebook"></a>
                             </li>
-
                             <li class="social-icon-item">
                                 <a href="#" class="social-icon-link bi-instagram"></a>
                             </li>
-
                             <li class="social-icon-item">
-                                <a href="#" class="social-icon-link bi-linkedin"></a>
-                            </li>
-
-                            <li class="social-icon-item">
-                                <a href="https://youtube.com/templatemo" class="social-icon-link bi-youtube"></a>
+                                <a href="#" class="social-icon-link bi-whatsapp"></a>
                             </li>
                         </ul>
                     </div>
-
                 </div>
             </div>
         </div>
     </footer>
     <style>
-    .alert {
-        padding: 12px;
-        border-radius: 5px;
-    }
-    .alert-success {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-    .alert-danger {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
-    .spinner-border {
-        width: 1.5rem;
-        height: 1.5rem;
-    }
-</style>
+        .alert {
+            padding: 12px;
+            border-radius: 5px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .spinner-border {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+    </style>
     <script src="../static/js/bootstrap.bundle.min.js"></script>
     <script>
         document.getElementById('loginForm').addEventListener('submit', async function (e) {

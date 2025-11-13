@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lotus Clinic - Dashboard</title>
+    <link href="../static/css/templatemo-kind-heart-charity.css" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            position: fixed;
+            left: -280px;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #2d5f5d 0%, #4a7c7a 50%, #5a8c8a 100%);
+            transition: left 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .close-btn {
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .logo-section {
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-circle {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-flower {
+            width: 70px;
+            height: 70px;
+            position: relative;
+        }
+
+        .petal {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            background: #5bc1ac;
+            border-radius: 50% 0;
+            opacity: 0.8;
+        }
+
+        .petal:nth-child(1) {
+            transform: rotate(0deg) translateX(20px);
+        }
+
+        .petal:nth-child(2) {
+            transform: rotate(45deg) translateX(20px);
+        }
+
+        .petal:nth-child(3) {
+            transform: rotate(90deg) translateX(20px);
+        }
+
+        .petal:nth-child(4) {
+            transform: rotate(135deg) translateX(20px);
+        }
+
+        .petal:nth-child(5) {
+            transform: rotate(180deg) translateX(20px);
+        }
+
+        .petal:nth-child(6) {
+            transform: rotate(225deg) translateX(20px);
+        }
+
+        .petal:nth-child(7) {
+            transform: rotate(270deg) translateX(20px);
+        }
+
+        .petal:nth-child(8) {
+            transform: rotate(315deg) translateX(20px);
+        }
+
+        .center-circle {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #3a9d8f;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .logo-text {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .menu {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 30px;
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        /* OVERLAY */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(90deg, #5bc1ac 0%, #6dd4bd 100%);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .hamburger {
+            cursor: pointer;
+        }
+
+        .hamburger span {
+            display: block;
+            width: 35px;
+            height: 4px;
+            background: white;
+            margin: 6px 0;
+            border-radius: 2px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 8px 20px;
+            border-radius: 25px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .status-badge::before {
+            content: "✓";
+            background: white;
+            color: #5bc1ac;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid white;
+            object-fit: cover;
+        }
+
+        /* CONTENT */
+        .profile-card {
+            background: white;
+            margin: 30px auto;
+            max-width: 900px;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e0e0e0;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid #5bc1ac;
+            object-fit: cover;
+        }
+
+        .profile-info h2 {
+            color: #5bc1ac;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .profile-info p {
+            color: #333;
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        .section-title {
+            color: #5bc1ac;
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .patients-table {
+            background: linear-gradient(135deg, #e8f9f6 0%, #d4f1eb 100%);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .table-header {
+            background: linear-gradient(90deg, #5bc1ac 0%, #6dd4bd 100%);
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            padding: 18px 30px;
+            font-weight: 600;
+            color: white;
+            font-size: 16px;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(91, 193, 172, 0.2);
+            align-items: center;
+            background: white;
+            transition: background 0.2s;
+        }
+
+        .table-row:hover {
+            background: #f0faf8;
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .patient-name {
+            color: #333;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .senha-code {
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .btn-chamar {
+            background: linear-gradient(135deg, #2d5f5d 0%, #3a7775 100%);
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 3px 8px rgba(45, 95, 93, 0.3);
+        }
+
+        .btn-chamar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(45, 95, 93, 0.4);
+            background: linear-gradient(135deg, #3a7775 0%, #4a8987 100%);
+        }
+
+        .btn-chamar:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+
+            .table-header,
+            .table-row {
+                grid-template-columns: 1.5fr 1fr 1fr;
+                padding: 15px 20px;
+            }
+
+            .profile-card {
+                margin: 20px;
+                padding: 20px;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="close-btn" id="closeBtn">×</button>
+        </div>
+
+        <div class="logo-section">
+            <div class="logo-circle">
+                <img class="logo img-fluid" src="../static/images/Lotus.png">
+            </div>
+            <div class="logo-text">Lotus Clinic</div>
+        </div>
+
+        <nav class="menu">
+            <a href="#" class="menu-item">
+                <span class="menu-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                    </svg>
+                </span>
+                Meu Perfil
+            </a>
+
+            <a href="#" class="menu-item">
+                <span class="menu-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
+                    </svg>
+                </span>
+                Agenda
+            </a>
+
+            <a href="#" class="menu-item">
+                <span class="menu-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                    </svg>
+                </span>
+                Pacientes
+            </a>
+
+            <a href="#" class="menu-item">
+                <span class="menu-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+                    </svg>
+                </span>
+                Relatórios
+            </a>
+
+            <a href="#" class="menu-item">
+                <span class="menu-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+                    </svg>
+                </span>
+                Configurações
+            </a>
+
+            <a href="#" class="menu-item">
+                <span class="menu-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+                    </svg>
+                </span>
+                Sair
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <header class="header">
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+
+
+        <img src="../static/images/amelie.jpg" alt="User" class="user-avatar">
+    </header>
+
+    <main>
+        <div class="profile-card">
+            <div class="profile-header">
+                <img src="../static/images/amelie.jpg" alt="Nursius enfermis" class="profile-avatar">
+                <div class="profile-info">
+                    <h2>Nursius enfermis</h2>
+                    <p><strong>Cargo:</strong> Enfermeira de triagem</p>
+                    <p><strong>Experiência:</strong> 20 anos</p>
+                </div>
+            </div>
+
+            <h3 class="section-title">O que tem pra hoje?</h3>
+
+            <div class="patients-table">
+                <div class="table-header">
+                    <div>Paciente</div>
+                    <div>Senha</div>
+                    <div>Ações</div>
+                </div>
+
+                <div class="table-row">
+                    <div class="patient-name">Donald Krazsinsky</div>
+                    <div class="senha-code">T001</div>
+                    <div>
+                        <button class="btn-chamar">chamar</button>
+                    </div>
+                </div>
+
+                <div class="table-row">
+                    <div class="patient-name">Arnold Schwarzenegger</div>
+                    <div class="senha-code">T375</div>
+                    <div>
+                        <button class="btn-chamar">chamar</button>
+                    </div>
+                </div>
+
+                <div class="table-row">
+                    <div class="patient-name">Clill Binton</div>
+                    <div class="senha-code">T835</div>
+                    <div>
+                        <button class="btn-chamar">chamar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const hamburger = document.getElementById('hamburger');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const closeBtn = document.getElementById('closeBtn');
+
+        // Abrir sidebar
+        hamburger.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            overlay.classList.add('active');
+        });
+
+        // Fechar sidebar ao clicar no X
+        closeBtn.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        // Fechar sidebar ao clicar no overlay
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        // Fechar sidebar ao clicar em qualquer item do menu
+        const menuItems = document.querySelectorAll('.menu-item');
+        menuItems.forEach(item => {
+            item.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+
+</html>

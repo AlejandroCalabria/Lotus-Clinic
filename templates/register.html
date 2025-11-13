@@ -8,9 +8,245 @@
     <link href="../static/css/bootstrap.min.css" rel="stylesheet">
     <link href="../static/css/bootstrap-icons.css" rel="stylesheet">
     <link href="../static/css/templatemo-kind-heart-charity.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+        }
 
+        .cadastro-section {
+            padding: 60px 0;
+            min-height: calc(100vh - 200px);
+            display: flex;
+            align-items: center;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 50px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .form-header h2 {
+            color: var(--text-dark);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .form-control-custom {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+
+        .form-control-custom:focus {
+            outline: none;
+            border-color: #5a6c7d;
+            background-color: white;
+            box-shadow: 0 0 0 4px rgba(90, 108, 125, 0.1);
+        }
+
+        .form-control-custom::placeholder {
+            color: #a0aec0;
+        }
+
+        .avatar-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .avatar-upload {
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .avatar-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid #5a6c7d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #5a6c7d;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 0 auto;
+        }
+
+        .avatar-preview:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(90, 108, 125, 0.4);
+        }
+
+        .avatar-preview i {
+            font-size: 4rem;
+            color: white;
+        }
+
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #avatarUpload {
+            display: none;
+        }
+
+        .avatar-label {
+            display: block;
+            margin-top: 10px;
+            color: #5a6c7d;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .btn-continuar {
+            background: #5a6c7d;
+            color: white;
+            border: none;
+            padding: 16px 50px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(90, 108, 125, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-continuar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(90, 108, 125, 0.6);
+            background: #4a5a6a;
+        }
+
+        .btn-continuar:active {
+            transform: translateY(0);
+        }
+
+        .loading {
+            text-align: center;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border-width: 0.3rem;
+        }
+
+        .loading p {
+            color: #5a6c7d;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        .cadastro-links {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .cadastro-links a {
+            color: #718096;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+
+        .cadastro-links a:hover {
+            color: #5a6c7d;
+        }
+
+        .cadastro-links strong {
+            color: #5a6c7d;
+            font-weight: 700;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .form-row {
+            margin-bottom: 25px;
+        }
+
+        .input-group-icon {
+            position: relative;
+        }
+
+        .input-group-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 1.2rem;
+        }
+
+        .input-group-icon .form-control-custom {
+            padding-left: 45px;
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 30px 20px;
+            }
+
+            .form-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .btn-continuar {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
-
 
 <body>
     <header class="site-header">
@@ -60,76 +296,81 @@
     </nav>
 
     <section class="cadastro-section">
-    <div class="container">
-        <form id="cadastroForm" enctype="multipart/form-data">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <input type="text" class="form-control-custom" name="cpf" placeholder="insira seu CPF" required>
+        <div class="container">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Criar sua conta</h2>
+                    <p>Preencha os dados abaixo para começar</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <input type="tel" class="form-control-custom" name="telefone" placeholder="insira seu telefone"
-                        required>
-                </div>
-            </div>
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <input type="email" class="form-control-custom" name="email" placeholder="insira seu e-mail" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <input type="text" class="form-control-custom" name="cep" placeholder="insira seu CEP" required>
-                </div>
-            </div>
+                <form id="cadastroForm" enctype="multipart/form-data">
+                    <div class="avatar-section">
+                        <label for="avatarUpload" class="avatar-upload">
+                            <div class="avatar-preview" id="avatarPreview">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            <span class="avatar-label">Adicionar foto</span>
+                            <input type="file" id="avatarUpload" name="avatar" accept="image/*">
+                        </label>
+                    </div>
 
-            <div class="row">
-                <div class="col-12 mb-3">
-                    <input type="date" class="form-control-custom" name="dataNascimento"
-                        placeholder="insira sua data de nascimento" required>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <input type="password" class="form-control-custom" name="senha" id="senha"
-                        placeholder="insira uma senha" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <input type="password" class="form-control-custom" name="confirmaSenha" id="confirmaSenha"
-                        placeholder="Confirme sua senha" required>
-                </div>
-            </div>
-
-            <div class="row align-items-center">
-                <div class="col-md-6 mb-3 d-flex justify-content-center">
-                    <label for="avatarUpload" class="avatar-upload">
-                        <div class="avatar-preview" id="avatarPreview">
-                            <i class="bi bi-person-circle"></i>
+                    <div class="row form-row">
+                        <div class="col-md-12 mb-3">
+                            <input type="text" class="form-control-custom" name="nome" placeholder="Nome completo" required>
                         </div>
-                        <input type="file" id="avatarUpload" name="avatar" accept="image/*">
-                    </label>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <input type="text" class="form-control-custom" name="nome" placeholder="nome" required>
-                </div>
-            </div>
+                    </div>
 
-            <div class="text-center">
-                <button type="submit" class="btn-continuar" id="btnCadastro">continuar</button>
+                    <div class="row form-row">
+                        <div class="col-md-6 mb-3">
+                            <input type="text" class="form-control-custom" name="cpf" placeholder="CPF" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <input type="tel" class="form-control-custom" name="telefone" placeholder="Telefone" required>
+                        </div>
+                    </div>
 
-                <div class="loading" style="display: none; margin-top: 15px;">
-                    <div class="spinner-border text-light" role="status"></div>
-                    <p style="color: white;">Cadastrando...</p>
-                </div>
-            </div>
+                    <div class="row form-row">
+                        <div class="col-md-6 mb-3">
+                            <input type="email" class="form-control-custom" name="email" placeholder="E-mail" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <input type="date" class="form-control-custom" name="dataNascimento" placeholder="Data de nascimento" required>
+                        </div>
+                    </div>
 
-            <div id="mensagem" class="mt-3 text-center" style="display: none;"></div>
-            
-            <div class="cadastro-links">
-                <a href="login.html">já tem uma conta? <strong>entrar</strong></a>
+                    <div class="row form-row">
+                        <div class="col-md-12 mb-3">
+                            <input type="text" class="form-control-custom" name="cep" placeholder="CEP" required>
+                        </div>
+                    </div>
+
+                    <div class="row form-row">
+                        <div class="col-md-6 mb-3">
+                            <input type="password" class="form-control-custom" name="senha" id="senha" placeholder="Senha" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <input type="password" class="form-control-custom" name="confirmaSenha" id="confirmaSenha" placeholder="Confirme sua senha" required>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn-continuar" id="btnCadastro">Continuar</button>
+
+                        <div class="loading" style="display: none; margin-top: 15px;">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p>Cadastrando...</p>
+                        </div>
+                    </div>
+
+                    <div id="mensagem" class="mt-3 text-center" style="display: none;"></div>
+
+                    <div class="cadastro-links">
+                        <a href="/login">Já tem uma conta? <strong>Entrar</strong></a>
+                    </div>
+                </form>
             </div>
-        </form>
-    </div>
-</section>
+        </div>
+    </section>
 
     <footer class="site-footer">
         <div class="container">
@@ -140,7 +381,6 @@
 
                 <div class="col-lg-4 col-md-6 col-12 mb-4">
                     <h5 class="site-footer-title mb-3">Conteúdos</h5>
-
                     <ul class="footer-menu">
                         <li class="footer-menu-item"><a href="#" class="footer-menu-link">Sobre nós</a></li>
                         <li class="footer-menu-item"><a href="#" class="footer-menu-link">algum erro na página?</a></li>
@@ -150,24 +390,17 @@
 
                 <div class="col-lg-4 col-md-6 col-12 mx-auto">
                     <h5 class="site-footer-title mb-3">Informações de contato</h5>
-
                     <p class="text-white d-flex mb-2">
                         <i class="bi-geo-alt me-2"></i>
                         Rua Mariano Procópio, 37 - Rio de Janeiro, RJ
                     </p>
-
                     <p class="text-white d-flex mb-2">
                         <i class="bi-telephone me-2"></i>
-                        <a href="tel:21997925722" class="site-footer-link">
-                            (21) 9 9792-5722
-                        </a>
+                        <a href="tel:21997925722" class="site-footer-link">(21) 9 9792-5722</a>
                     </p>
-
                     <p class="text-white d-flex">
                         <i class="bi-envelope me-2"></i>
-                        <a href="mailto:contato@lotusclinic.com" class="site-footer-link">
-                            contato@lotusclinic.com
-                        </a>
+                        <a href="mailto:contato@lotusclinic.com" class="site-footer-link">contato@lotusclinic.com</a>
                     </p>
                 </div>
             </div>
@@ -179,51 +412,18 @@
                     <div class="col-lg-6 col-md-7 col-12">
                         <p class="copyright-text mb-0">Copyright © 2025 <a href="#">Lotus Clinic</a></p>
                     </div>
-
                     <div class="col-lg-6 col-md-5 col-12 d-flex justify-content-center align-items-center mx-auto">
                         <ul class="social-icon">
-                            <li class="social-icon-item">
-                                <a href="#" class="social-icon-link bi-twitter"></a>
-                            </li>
-                            <li class="social-icon-item">
-                                <a href="#" class="social-icon-link bi-facebook"></a>
-                            </li>
-                            <li class="social-icon-item">
-                                <a href="#" class="social-icon-link bi-instagram"></a>
-                            </li>
-                            <li class="social-icon-item">
-                                <a href="#" class="social-icon-link bi-whatsapp"></a>
-                            </li>
+                            <li class="social-icon-item"><a href="#" class="social-icon-link bi-twitter"></a></li>
+                            <li class="social-icon-item"><a href="#" class="social-icon-link bi-facebook"></a></li>
+                            <li class="social-icon-item"><a href="#" class="social-icon-link bi-instagram"></a></li>
+                            <li class="social-icon-item"><a href="#" class="social-icon-link bi-whatsapp"></a></li>
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
     </footer>
-    <style>
-        .alert {
-            padding: 12px;
-            border-radius: 5px;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        #avatarPreview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-    </style>
 
     <script src="../static/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -289,7 +489,6 @@
             }
         });
     </script>
-
 </body>
 
 </html>

@@ -57,18 +57,21 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 import mysql.connector
 from mysql.connector import Error
 
+# Procure essa função no app.py
 def get_db_connection():
-    """Conectar ao banco MySQL"""
     try:
-        conn = mysql.connector.connect(
+        connection = mysql.connector.connect(
             host='localhost',
+            port=3306,
             database='clinica_med',
-            user='root',  # ← MUDAR PARA SEU USUÁRIO
-            password='@IamAStudent2010'  # ← MUDAR PARA SUA SENHA
+            user='root',
+            password=''  # ← DEIXE VAZIO (sem senha)
         )
-        return conn
+        if connection.is_connected():
+            print("✅ Conectado ao MySQL!")
+            return connection
     except Error as e:
-        logger.error(f"❌ Erro ao conectar MySQL: {e}")
+        print(f"❌ Erro ao conectar MySQL: {e}")
         return None
 
 def hash_senha(senha):
@@ -714,6 +717,8 @@ def register_page():
 def register():
     """Registrar novo usuário"""
     try:
+        import base64
+        
         # Pegar dados do formulário
         nome = request.form.get('nome')
         cpf = request.form.get('cpf')
@@ -734,14 +739,27 @@ def register():
         if len(senha) < 6:
             return jsonify({'success': False, 'error': 'Senha deve ter no mínimo 6 caracteres'}), 400
         
-        # Processar avatar
-        avatar_filename = None
+        # ✅ PROCESSAR AVATAR EM BASE64
+        foto_base64 = None
         if 'avatar' in request.files:
             file = request.files['avatar']
             if file and file.filename and allowed_file(file.filename):
-                filename = secure_filename(f"{cpf}_{file.filename}")
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                avatar_filename = filename
+                # Ler bytes da imagem
+                foto_bytes = file.read()
+                foto_base64_raw = base64.b64encode(foto_bytes).decode('utf-8')
+                
+                # Detectar tipo MIME
+                extensao = file.filename.rsplit('.', 1)[1].lower()
+                mime_types = {
+                    'jpg': 'image/jpeg',
+                    'jpeg': 'image/jpeg',
+                    'png': 'image/png',
+                    'gif': 'image/gif'
+                }
+                mime_type = mime_types.get(extensao, 'image/jpeg')
+                
+                # ✅ Montar Data URL completo COM "data:"
+                foto_base64 = f"data:{mime_type};base64,{foto_base64_raw}"
         
         # Salvar no banco MySQL
         conn = get_db_connection()
@@ -754,12 +772,13 @@ def register():
             last_id = result[0] if result[0] else 0
             novo_cod = f'U{str(last_id + 1).zfill(3)}'
             
+            # ✅ INSERIR COM BASE64 (ou NULL se não houver foto)
             cursor.execute('''
                 INSERT INTO usuario (cod_usuario, CPF, Nome_user, telefone, email, 
                                    sexo, data_nasc, senha, foto, cod_cargo)
                 VALUES (%s, %s, %s, %s, %s, 'NB', %s, %s, %s, 'C002')
             ''', (novo_cod, cpf, nome, telefone, email, data_nascimento, 
-                  hash_senha(senha), avatar_filename))
+                  hash_senha(senha), foto_base64))
             
             conn.commit()
             
@@ -1634,7 +1653,17 @@ def perfil_medico():
     
     # Se tem foto, ajustar o caminho
     if medico and medico.get('foto'):
-        medico['foto'] = f"/static/uploads/avatars/{medico['foto']}"
+        if medico['foto'].startswith('data:'):
+            # Já está em base64, não mexer
+            pass
+        elif '.' in medico['foto']:
+            # Formato antigo (nome de arquivo)
+            medico['foto'] = f"/static/uploads/avatars/{medico['foto']}"
+        else:
+            # Base64 puro, adicionar prefixo
+            medico['foto'] = f"data:image/jpeg;base64,{medico['foto']}"
+    else:
+        medico['foto'] = '/static/images/default-avatar-image.jpg'
     
     # Buscar consultas do dia (USAR %s)
     cursor.execute('''
@@ -1767,7 +1796,17 @@ def perfil_paciente():
     
     # Se tem foto, ajustar o caminho
     if paciente and paciente.get('foto'):
-        paciente['foto'] = f"/static/uploads/avatars/{paciente['foto']}"
+        if paciente['foto'].startswith('data:'):
+            # Já está em base64, não mexer
+            pass
+        elif '.' in paciente['foto']:
+            # Formato antigo (nome de arquivo)
+            paciente['foto'] = f"/static/uploads/avatars/{paciente['foto']}"
+        else:
+            # Base64 puro, adicionar prefixo
+            paciente['foto'] = f"data:image/jpeg;base64,{paciente['foto']}"
+    else:
+        paciente['foto'] = '/static/images/default-avatar-image.jpg'
     
     # Buscar consultas do paciente (últimas 10) - MELHORADA
     cursor.execute('''
@@ -2019,61 +2058,105 @@ def solicitar_triagem():
 @app.route('/api/upload-foto', methods=['POST'])
 @login_required
 def upload_foto():
+    """Upload de foto convertida para Base64"""
     try:
-        # Log para debug
+        import base64
+        
         logger.info(f"Upload iniciado pelo usuário: {session['user_id']}")
         
         if 'foto' not in request.files:
-            logger.error("Nenhum arquivo enviado")
             return jsonify({'success': False, 'error': 'Nenhuma foto enviada'}), 400
         
         file = request.files['foto']
         
         if not file or file.filename == '':
-            logger.error("Arquivo vazio")
             return jsonify({'success': False, 'error': 'Nenhum arquivo selecionado'}), 400
         
         if not allowed_file(file.filename):
-            logger.error(f"Tipo de arquivo não permitido: {file.filename}")
-            return jsonify({'success': False, 'error': 'Tipo de arquivo não permitido. Use PNG, JPG, JPEG ou GIF'}), 400
+            return jsonify({'success': False, 'error': 'Tipo de arquivo não permitido'}), 400
         
-        # Gerar nome único
-        filename = secure_filename(f"{session['user_id']}_{file.filename}")
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        # Converter para Base64
+        foto_bytes = file.read()
+        foto_base64 = base64.b64encode(foto_bytes).decode('utf-8')
         
-        # Salvar arquivo
-        file.save(filepath)
-        logger.info(f"Arquivo salvo em: {filepath}")
+        # Detectar tipo do arquivo
+        extensao = file.filename.rsplit('.', 1)[1].lower()
+        mime_types = {
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif'
+        }
+        mime_type = mime_types.get(extensao, 'image/jpeg')
         
-        # Atualizar banco
+        # ✅ CRÍTICO: Adicionar "data:" no início
+        foto_completa = f"data:{mime_type};base64,{foto_base64}"
+        
+        # Salvar no banco
         conn = get_db_connection()
-        if not conn:
-            return jsonify({'success': False, 'error': 'Erro ao conectar ao banco'}), 500
-        
         cursor = conn.cursor()
         
         cursor.execute('''
-            UPDATE usuario SET foto = %s WHERE cod_usuario = %s
-        ''', (filename, session['user_id']))
-        
-        rows_affected = cursor.rowcount
-        logger.info(f"Linhas afetadas no UPDATE: {rows_affected}")
+            UPDATE usuario 
+            SET foto = %s 
+            WHERE cod_usuario = %s
+        ''', (foto_completa, session['user_id']))
+        #     ↑ AGORA COM "data:"
         
         conn.commit()
         cursor.close()
         conn.close()
         
-        foto_url = f'/static/uploads/avatars/{filename}'
-        logger.info(f"Upload concluído! URL: {foto_url}")
+        logger.info(f"✅ Foto salva como Base64 no banco")
         
         return jsonify({
             'success': True, 
             'message': 'Foto atualizada com sucesso!',
-            'foto_url': foto_url
+            'foto_url': foto_completa  # ✅ Retornar completo
         })
         
     except Exception as e:
         logger.error(f"Erro no upload: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+    
+@app.route('/api/foto-perfil', methods=['GET'])
+@login_required
+def get_foto_perfil():
+    """Retornar foto do perfil como Data URL"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute('''
+            SELECT foto FROM usuario WHERE cod_usuario = %s
+        ''', (session['user_id'],))
+        
+        usuario = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+        
+        if usuario and usuario['foto']:
+            # Se já está no formato data:image/...;base64,
+            if usuario['foto'].startswith('data:'):
+                foto_url = usuario['foto']
+            # Se está no formato antigo (nome de arquivo)
+            elif '.' in usuario['foto']:
+                foto_url = f"/static/uploads/avatars/{usuario['foto']}"
+            # Se é só o base64 puro
+            else:
+                foto_url = f"data:image/jpeg;base64,{usuario['foto']}"
+            
+            return jsonify({'success': True, 'foto': foto_url})
+        
+        # Foto padrão se não tiver
+        return jsonify({
+            'success': True, 
+            'foto': '/static/images/default-avatar-image.jpg'
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar foto: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/generate-pdf', methods=['POST'])
@@ -2517,6 +2600,201 @@ def salvar_resultado_triagem():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+# ========== ADICIONAR ESTAS ROTAS NO app.py ==========
+# Adicione estas importações no topo do arquivo
+import secrets
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime, timedelta
+
+# Armazenamento temporário de códigos (em produção, use Redis ou banco)
+recovery_codes = {}
+
+# ========== ROTAS DE RECUPERAÇÃO DE SENHA ==========
+
+@app.route('/password')
+def password_page():
+    """Página de recuperação de senha"""
+    return render_template('password.html')
+
+@app.route('/password-code')
+def password_code_page():
+    """Página de código de verificação"""
+    return render_template('password-code.html')
+
+@app.route('/api/solicitar-codigo', methods=['POST'])
+def solicitar_codigo():
+    """Solicitar código de recuperação de senha"""
+    try:
+        data = request.get_json()
+        cpf = data.get('cpf', '').replace('.', '').replace('-', '')
+        email = data.get('email', '').lower().strip()
+        
+        if not cpf or not email:
+            return jsonify({'success': False, 'error': 'CPF e email são obrigatórios'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Verificar se usuário existe
+        cursor.execute('''
+            SELECT cod_usuario, Nome_user 
+            FROM usuario 
+            WHERE CPF = %s AND email = %s
+        ''', (cpf, email))
+        
+        usuario = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+        
+        if not usuario:
+            return jsonify({
+                'success': False, 
+                'error': 'CPF ou email não encontrados'
+            }), 404
+        
+        # Gerar código de 4 dígitos
+        codigo = ''.join([str(secrets.randbelow(10)) for _ in range(4)])
+        
+        # Armazenar código com expiração de 10 minutos
+        recovery_codes[email] = {
+            'codigo': codigo,
+            'cpf': cpf,
+            'expira': datetime.now() + timedelta(minutes=10),
+            'tentativas': 0
+        }
+        
+        # Enviar email (simulado - configure SMTP real em produção)
+        logger.info(f"📧 Código de recuperação para {email}: {codigo}")
+        
+        # TODO: Implementar envio real de email
+        # enviar_email_recuperacao(email, codigo, usuario['Nome_user'])
+        
+        return jsonify({
+            'success': True,
+            'message': 'Código enviado para seu email',
+            'debug_code': codigo  # REMOVER EM PRODUÇÃO!
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Erro ao solicitar código: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/verificar-codigo', methods=['POST'])
+def verificar_codigo():
+    """Verificar código de recuperação"""
+    try:
+        data = request.get_json()
+        email = data.get('email', '').lower().strip()
+        codigo_digitado = data.get('codigo', '')
+        
+        if not email or not codigo_digitado:
+            return jsonify({'success': False, 'error': 'Email e código são obrigatórios'}), 400
+        
+        # Verificar se existe código para este email
+        if email not in recovery_codes:
+            return jsonify({
+                'success': False,# Continuação do @app.route('/api/verificar-codigo')
+                'error': 'Código não encontrado ou expirado. Solicite um novo código.'
+            }), 404
+        
+        dados_codigo = recovery_codes[email]
+        
+        # Verificar expiração
+        if datetime.now() > dados_codigo['expira']:
+            del recovery_codes[email]
+            return jsonify({
+                'success': False,
+                'error': 'Código expirado. Solicite um novo código.'
+            }), 400
+        
+        # Verificar tentativas
+        if dados_codigo['tentativas'] >= 3:
+            del recovery_codes[email]
+            return jsonify({
+                'success': False,
+                'error': 'Muitas tentativas incorretas. Solicite um novo código.'
+            }), 400
+        
+        # Verificar código
+        if codigo_digitado != dados_codigo['codigo']:
+            recovery_codes[email]['tentativas'] += 1
+            return jsonify({
+                'success': False,
+                'error': f'Código incorreto. Tentativas restantes: {3 - recovery_codes[email]["tentativas"]}'
+            }), 400
+        
+        # Código correto - gerar token temporário
+        token = secrets.token_urlsafe(32)
+        recovery_codes[email]['token'] = token
+        
+        return jsonify({
+            'success': True,
+            'message': 'Código verificado com sucesso',
+            'token': token
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Erro ao verificar código: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/redefinir-senha', methods=['POST'])
+def redefinir_senha():
+    """Redefinir senha após verificação do código"""
+    try:
+        data = request.get_json()
+        email = data.get('email', '').lower().strip()
+        token = data.get('token', '')
+        nova_senha = data.get('nova_senha', '')
+        confirma_senha = data.get('confirma_senha', '')
+        
+        # Validações
+        if not all([email, token, nova_senha, confirma_senha]):
+            return jsonify({'success': False, 'error': 'Todos os campos são obrigatórios'}), 400
+        
+        if nova_senha != confirma_senha:
+            return jsonify({'success': False, 'error': 'As senhas não coincidem'}), 400
+        
+        if len(nova_senha) < 6:
+            return jsonify({'success': False, 'error': 'Senha deve ter no mínimo 6 caracteres'}), 400
+        
+        # Verificar token
+        if email not in recovery_codes or recovery_codes[email].get('token') != token:
+            return jsonify({'success': False, 'error': 'Token inválido ou expirado'}), 401
+        
+        cpf = recovery_codes[email]['cpf']
+        
+        # Atualizar senha no banco
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE usuario
+            SET senha = %s
+            WHERE CPF = %s AND email = %s
+        ''', (hash_senha(nova_senha), cpf, email))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        # Limpar código usado
+        del recovery_codes[email]
+        
+        return jsonify({
+            'success': True,
+            'message': 'Senha redefinida com sucesso!'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Erro ao redefinir senha: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+    
+
 @app.route('/api/relatorio-triagem/<cod_consulta>', methods=['GET'])
 @login_required
 def download_relatorio_triagem(cod_consulta):
@@ -2568,8 +2846,6 @@ def download_relatorio_triagem(cod_consulta):
     except Exception as e:
         logger.error(f"Erro ao gerar relatório: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
-
 # ========== INICIAR SERVIDOR ==========
 if __name__ == '__main__':
     print("\n" + "="*60)
@@ -2592,3 +2868,5 @@ if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
 
 # FIM DO ARQUIVO - NÃO ADICIONE NADA ABAIXO DESTA LINHA
+    
+    

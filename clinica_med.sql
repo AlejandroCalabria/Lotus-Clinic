@@ -404,3 +404,6 @@ SELECT u.email, u.Nome_user, u.cod_cargo, c.cargo_nome
 FROM usuario u
 JOIN cargo c ON u.cod_cargo = c.cod_cargo
 WHERE u.email = 'mariana@email.com';
+
+-- Alterar coluna foto para TEXT (suporta base64 grande)
+ALTER TABLE usuario MODIFY COLUMN foto TEXT;
