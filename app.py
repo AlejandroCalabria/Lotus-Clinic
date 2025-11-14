@@ -863,8 +863,11 @@ def login():
             elif user['cod_cargo'] == 'C003':  # Atendente/Triagem
                 redirect_url = '/perfil-atendente'  # ✅ CORRETO!
                 logger.info(f"📋 Redirecionando ATENDENTE para: {redirect_url}")
-            elif user['cod_cargo'] == 'C005':  # Atendente/Triagem
+            elif user['cod_cargo'] == 'C005':  # DEV
                 redirect_url = '/triagem'  # ✅ CORRETO!
+                logger.info(f"📋 Redirecionando PARA O TESTE DA IA para: {redirect_url}")
+            elif user['cod_cargo'] == 'C006':  # Atendente/Triagem
+                redirect_url = '/perfil-enfermeiro'  # ✅ CORRETO!
                 logger.info(f"📋 Redirecionando PARA O TESTE DA IA para: {redirect_url}")
             else:
                 redirect_url = '/perfil-paciente'
@@ -1698,6 +1701,126 @@ def perfil_medico():
                          consultas=consultas, 
                          stats=stats)
 
+
+# ========== ROTAS DO ENFERMEIRO ==========
+
+@app.route('/perfil-enfermeiro')
+@login_required
+def perfil_enfermeiro():
+    """Perfil do enfermeiro com triagens agendadas"""
+    if session.get('cod_cargo') != 'C006':
+        return redirect('/login')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Buscar dados do enfermeiro COM FOTO
+    cursor.execute('''
+        SELECT u.Nome_user, u.email, u.telefone, u.foto,
+               e.COREN, e.especialidade, e.anos_experiencia
+        FROM usuario u
+        JOIN enfermeiro e ON u.cod_usuario = e.cod_usuario
+        WHERE u.cod_usuario = %s
+    ''', (session['user_id'],))
+    
+    enfermeiro = cursor.fetchone()
+    
+    # ✅ CORREÇÃO: Ajustar foto (igual ao perfil-paciente e perfil-medico)
+    if enfermeiro and enfermeiro.get('foto'):
+        if enfermeiro['foto'].startswith('data:'):
+            # Já está em base64 completo
+            pass
+        elif '.' in enfermeiro['foto']:
+            # Formato antigo (nome de arquivo)
+            enfermeiro['foto'] = f"/static/uploads/avatars/{enfermeiro['foto']}"
+        else:
+            # Base64 puro, adicionar prefixo
+            enfermeiro['foto'] = f"data:image/jpeg;base64,{enfermeiro['foto']}"
+    else:
+        enfermeiro['foto'] = '/static/images/default-avatar-image.jpg'
+    
+    # Buscar cod_enfermeiro
+    cursor.execute('''
+        SELECT cod_enfermeiro FROM enfermeiro WHERE cod_usuario = %s
+    ''', (session['user_id'],))
+    
+    enf_data = cursor.fetchone()
+    cod_enfermeiro = enf_data['cod_enfermeiro'] if enf_data else None
+    
+    # ✅ CORREÇÃO: Buscar triagens COM FORMATAÇÃO CORRETA DE DATA/HORA
+    cursor.execute('''
+        SELECT 
+            c.cod_consulta,
+            DATE_FORMAT(c.data_consulta, '%%d/%%m/%%Y') as data_formatada,
+            TIME_FORMAT(c.hora_consulta, '%%H:%%i') as hora_consulta,
+            c.sintomas_descritos,
+            u.Nome_user as paciente,
+            u.CPF,
+            u.telefone,
+            un.nome_unidade,
+            s.numero_sala,
+            t.nivel_urgencia
+        FROM consulta c
+        JOIN triagem t ON c.cod_consulta = t.cod_consulta
+        JOIN usuario u ON c.cod_usuario = u.cod_usuario
+        JOIN unidade un ON c.cod_unidade = un.cod_unidade
+        JOIN sala s ON c.cod_sala = s.cod_sala
+        WHERE t.cod_enfermeiro = %s
+        AND c.status_consulta = 'Confirmada'
+        AND c.data_consulta >= CURDATE()
+        ORDER BY c.data_consulta ASC, c.hora_consulta ASC
+    ''', (cod_enfermeiro,))
+    
+    triagens = cursor.fetchall()
+    
+    # Estatísticas
+    cursor.execute('''
+        SELECT 
+            COUNT(*) as total_agendadas,
+            COUNT(CASE WHEN DATE(c.data_consulta) = CURDATE() THEN 1 END) as hoje
+        FROM consulta c
+        JOIN triagem t ON c.cod_consulta = t.cod_consulta
+        WHERE t.cod_enfermeiro = %s
+        AND c.status_consulta = 'Confirmada'
+    ''', (cod_enfermeiro,))
+    
+    stats_agendadas = cursor.fetchone()
+    
+    cursor.execute('''
+        SELECT COUNT(*) as total_realizadas
+        FROM consulta c
+        JOIN triagem t ON c.cod_consulta = t.cod_consulta
+        WHERE t.cod_enfermeiro = %s
+        AND c.status_consulta = 'Aguardando Consulta'
+        AND DATE(t.data_triagem) = CURDATE()
+    ''', (cod_enfermeiro,))
+    
+    stats_realizadas = cursor.fetchone()
+    
+    cursor.execute('''
+        SELECT COUNT(DISTINCT c.cod_usuario) as total_pacientes
+        FROM consulta c
+        JOIN triagem t ON c.cod_consulta = t.cod_consulta
+        WHERE t.cod_enfermeiro = %s
+        AND MONTH(t.data_triagem) = MONTH(CURDATE())
+    ''', (cod_enfermeiro,))
+    
+    stats_pacientes = cursor.fetchone()
+    
+    stats = {
+        'totalAgendadas': stats_agendadas['total_agendadas'] if stats_agendadas else 0,
+        'hoje': stats_agendadas['hoje'] if stats_agendadas else 0,
+        'totalRealizadas': stats_realizadas['total_realizadas'] if stats_realizadas else 0,
+        'totalPacientes': stats_pacientes['total_pacientes'] if stats_pacientes else 0
+    }
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('perfil-enfermeiro.html',
+                         enfermeiro=enfermeiro,
+                         triagens=triagens,
+                         stats=stats)
 
 
 @app.route('/api/consulta/cancelar', methods=['POST'])

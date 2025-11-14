@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -145,6 +146,61 @@
             font-weight: 500;
             z-index: 1000;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .profile-avatar-wrapper {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .profile-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid var(--lotus-secondary);
+            object-fit: cover;
+            transition: filter 0.3s ease;
+        }
+
+        .profile-avatar-wrapper:hover .profile-avatar {
+            filter: blur(2px);
+        }
+
+        .upload-label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(35, 114, 97, 0.85);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+
+        .profile-avatar-wrapper:hover .upload-label {
+            opacity: 1;
+        }
+
+        .upload-label i {
+            color: white;
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .upload-label::after {
+            content: 'Editar foto';
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
         }
 
         /* Main Content */
@@ -412,8 +468,15 @@
         }
 
         @keyframes slideDown {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         @media (max-width: 768px) {
@@ -434,6 +497,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Top Bar -->
     <div class="top-bar">
@@ -491,15 +555,23 @@
         <!-- Profile Section -->
         <div class="profile-section">
             <div class="profile-card">
+                <!-- ✅ CORREÇÃO: Adicionar funcionalidade de upload -->
                 <div class="profile-avatar-wrapper">
-                    <img src="../static/images/default-avatar-image.jpg" alt="Perfil" class="profile-avatar">
+                    <img src="{{ enfermeiro.foto if enfermeiro.foto else '../static/images/default-avatar-image.jpg' }}"
+                        alt="Perfil" class="profile-avatar" id="avatarImg"
+                        onerror="this.src='../static/images/default-avatar-image.jpg'">
+                    
+                    <label for="uploadFoto" class="upload-label">
+                        <i class="bi bi-camera"></i>
+                    </label>
+                    <input type="file" id="uploadFoto" accept="image/*" style="display: none;">
                 </div>
                 <div class="profile-info">
-                    <h2>Sandra Lima</h2>
-                    <p><strong>COREN:</strong> 123456-MG</p>
-                    <p><strong>Especialidade:</strong> Triagem</p>
-                    <p><strong>Email:</strong> sandra.enfermeira@email.com</p>
-                    <p><strong>Experiência:</strong> 8 anos</p>
+                    <h2>{{ enfermeiro.Nome_user }}</h2>
+                    <p><strong>COREN:</strong> {{ enfermeiro.COREN }}</p>
+                    <p><strong>Especialidade:</strong> {{ enfermeiro.especialidade }}</p>
+                    <p><strong>Email:</strong> {{ enfermeiro.email }}</p>
+                    <p><strong>Experiência:</strong> {{ enfermeiro.anos_experiencia }} anos</p>
                 </div>
             </div>
 
@@ -507,15 +579,15 @@
                 <h3>📊 Estatísticas do Dia</h3>
                 <div class="stat-item">
                     <span class="stat-label">Triagens Agendadas</span>
-                    <span class="stat-value" id="totalAgendadas">3</span>
+                    <span class="stat-value" id="totalAgendadas">{{ stats.totalAgendadas }}</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Triagens Realizadas</span>
-                    <span class="stat-value" id="totalRealizadas">0</span>
+                    <span class="stat-value" id="totalRealizadas">{{ stats.totalRealizadas }}</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Pacientes Atendidos</span>
-                    <span class="stat-value" id="totalPacientes">12</span>
+                    <span class="stat-value" id="totalPacientes">{{ stats.totalPacientes }}</span>
                 </div>
             </div>
         </div>
@@ -537,132 +609,141 @@
 
         <!-- Triagens Grid -->
         <div class="triagens-grid">
-            <!-- Exemplo de Triagem 1 -->
+            {% if triagens and triagens|length > 0 %}
+            {% for t in triagens %}
             <div class="triagem-card">
                 <div class="triagem-header">
                     <div>
-                        <div class="patient-name">Maria da Silva</div>
-                        <small style="color: #666;">CPF: 123.456.789-00</small>
+                        <div class="patient-name">{{ t.paciente }}</div>
+                        <small style="color: #666;">CPF: {{ t.CPF[:3] }}.{{ t.CPF[3:6] }}.{{ t.CPF[6:9] }}-{{ t.CPF[9:] }}</small>
                     </div>
-                    <span class="badge-normal">ROTINA</span>
+                    <span class="badge-{% if t.nivel_urgencia == 'Urgente' %}urgente{% else %}normal{% endif %}">
+                        {{ t.nivel_urgencia|upper }}
+                    </span>
                 </div>
 
                 <div class="triagem-info">
+                    <!-- ✅ CORREÇÃO: Usar data_formatada -->
                     <div class="info-row">
                         <i class="bi bi-calendar"></i>
-                        <span><strong>Data:</strong> 08/11/2025</span>
+                        <span><strong>Data:</strong> {{ t.data_formatada }}</span>
                     </div>
+                    <!-- ✅ CORREÇÃO: hora_consulta já está formatada no backend -->
                     <div class="info-row">
                         <i class="bi bi-clock"></i>
-                        <span><strong>Horário:</strong> 09:00</span>
+                        <span><strong>Horário:</strong> {{ t.hora_consulta }}</span>
                     </div>
                     <div class="info-row">
                         <i class="bi bi-hospital"></i>
-                        <span><strong>Unidade:</strong> Unidade Centro</span>
+                        <span><strong>Unidade:</strong> {{ t.nome_unidade }}</span>
                     </div>
                     <div class="info-row">
                         <i class="bi bi-door-open"></i>
-                        <span><strong>Sala:</strong> 101</span>
+                        <span><strong>Sala:</strong> {{ t.numero_sala }}</span>
                     </div>
 
                     <div class="sintomas-preview">
                         <strong>📝 Sintomas Relatados:</strong>
-                        <p>Dor de cabeça intensa há 3 dias, acompanhada de náuseas e sensibilidade à luz. Dor pulsátil na região temporal direita.</p>
+                        <p>{{ t.sintomas_descritos }}</p>
                     </div>
                 </div>
 
                 <div class="action-buttons">
-                    <button class="btn btn-realizar" onclick="realizarTriagem('C008', 'Maria da Silva')">
+                    <button class="btn btn-realizar"
+                        onclick="realizarTriagem('{{ t.cod_consulta }}', '{{ t.paciente }}')">
                         <i class="bi bi-clipboard-pulse"></i> Realizar Triagem
                     </button>
                 </div>
             </div>
-
-            <!-- Exemplo de Triagem 2 -->
-            <div class="triagem-card">
-                <div class="triagem-header">
-                    <div>
-                        <div class="patient-name">João Santos</div>
-                        <small style="color: #666;">CPF: 987.654.321-00</small>
-                    </div>
-                    <span class="badge-normal">ROTINA</span>
-                </div>
-
-                <div class="triagem-info">
-                    <div class="info-row">
-                        <i class="bi bi-calendar"></i>
-                        <span><strong>Data:</strong> 08/11/2025</span>
-                    </div>
-                    <div class="info-row">
-                        <i class="bi bi-clock"></i>
-                        <span><strong>Horário:</strong> 10:30</span>
-                    </div>
-                    <div class="info-row">
-                        <i class="bi bi-hospital"></i>
-                        <span><strong>Unidade:</strong> Unidade Centro</span>
-                    </div>
-                    <div class="info-row">
-                        <i class="bi bi-door-open"></i>
-                        <span><strong>Sala:</strong> 101</span>
-                    </div>
-
-                    <div class="sintomas-preview">
-                        <strong>📝 Sintomas Relatados:</strong>
-                        <p>Febre alta (39°C) desde ontem, tosse seca, dor no corpo e cansaço extremo. Sem histórico de viagens recentes.</p>
-                    </div>
-                </div>
-
-                <div class="action-buttons">
-                    <button class="btn btn-realizar" onclick="realizarTriagem('C009', 'João Santos')">
-                        <i class="bi bi-clipboard-pulse"></i> Realizar Triagem
-                    </button>
-                </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-calendar-x"></i>
+                <h3>Nenhuma triagem agendada</h3>
+                <p>Você não possui triagens agendadas para hoje.</p>
             </div>
-
-            <!-- Exemplo de Triagem 3 -->
-            <div class="triagem-card">
-                <div class="triagem-header">
-                    <div>
-                        <div class="patient-name">Ana Oliveira</div>
-                        <small style="color: #666;">CPF: 456.789.123-00</small>
-                    </div>
-                    <span class="badge-urgente">URGENTE</span>
-                </div>
-
-                <div class="triagem-info">
-                    <div class="info-row">
-                        <i class="bi bi-calendar"></i>
-                        <span><strong>Data:</strong> 08/11/2025</span>
-                    </div>
-                    <div class="info-row">
-                        <i class="bi bi-clock"></i>
-                        <span><strong>Horário:</strong> 14:00</span>
-                    </div>
-                    <div class="info-row">
-                        <i class="bi bi-hospital"></i>
-                        <span><strong>Unidade:</strong> Unidade Centro</span>
-                    </div>
-                    <div class="info-row">
-                        <i class="bi bi-door-open"></i>
-                        <span><strong>Sala:</strong> 102</span>
-                    </div>
-
-                    <div class="sintomas-preview">
-                        <strong>📝 Sintomas Relatados:</strong>
-                        <p>Dor no peito aguda com irradiação para o braço esquerdo, falta de ar, sudorese fria. Paciente com histórico de hipertensão.</p>
-                    </div>
-                </div>
-
-                <div class="action-buttons">
-                    <button class="btn btn-realizar" onclick="realizarTriagem('C010', 'Ana Oliveira')">
-                        <i class="bi bi-clipboard-pulse"></i> Realizar Triagem
-                    </button>
-                </div>
-            </div>
+            {% endif %}
         </div>
     </main>
 
     <script>
+        document.getElementById('uploadFoto').addEventListener('change', async function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Verificar tamanho (máx 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showError('❌ Arquivo muito grande! Máximo 5MB.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('foto', file);
+
+            try {
+                const response = await fetch('/api/upload-foto', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('avatarImg').src = data.foto_url;
+                    showSuccess('✅ Foto atualizada com sucesso!');
+                } else {
+                    showError('❌ Erro: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showError('❌ Erro ao fazer upload da foto');
+            }
+        });
+
+        // Sidebar Toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            sidebarOverlay.classList.add('active');
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+
+        document.querySelectorAll('.sidebar-menu-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                }
+            });
+        });
+
+        // Realizar Triagem
+        function realizarTriagem(codConsulta, nomePaciente) {
+            if (confirm(`Iniciar triagem do paciente ${nomePaciente}?`)) {
+                window.location.href = `/triagem?cod_consulta=${codConsulta}&paciente=${encodeURIComponent(nomePaciente)}`;
+            }
+        }
+
+        function showSuccess(msg) {
+            const alert = document.getElementById('successAlert');
+            alert.textContent = msg;
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), 5000);
+        }
+
+        function showError(msg) {
+            const alert = document.getElementById('errorAlert');
+            alert.textContent = msg;
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), 5000);
+        }
         // Sidebar Toggle
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
@@ -721,12 +802,13 @@
     <div vw class="enabled">
         <div vw-access-button class="active"></div>
         <div vw-plugin-wrapper>
-          <div class="vw-plugin-top-wrapper"></div>
+            <div class="vw-plugin-top-wrapper"></div>
         </div>
-      </div>
-      <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
-      <script>
+    </div>
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
         new window.VLibras.Widget('https://vlibras.gov.br/app');
-      </script>
+    </script>
 </body>
+
 </html>

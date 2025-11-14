@@ -332,7 +332,7 @@ CREATE TABLE enfermeiro (
 );
 -- ADICIONAR APÓS OS USUÁRIOS EXISTENTES
 INSERT INTO usuario (cod_usuario, CPF, Nome_user, telefone, email, sexo, data_nasc, senha, cod_cargo) VALUES
-('U026', '44455566677', 'Sandra Lima', '11966554433', 'sandra.enfermeira@email.com', 'F', '1988-06-25', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'C006'),
+('U026', '44455566677', 'Sandra Lima', '11966554433', 'sandra.enfermeira@email.com', 'F', '1988-06-25', 'b578dc5fcbfabbc7e96400601d0858c951f04929faef033bbbc117ab935c6ae9', 'C006'),
 ('U027', '55566677788', 'Roberto Costa', '11955443322', 'roberto.enfermeiro@email.com', 'M', '1985-11-10', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'C006');
 
 insert into usuario(cod_usuario, cpf, nome_user, telefone, email, sexo, data_nasc, senha, cod_cargo) values
@@ -407,3 +407,9 @@ WHERE u.email = 'mariana@email.com';
 
 -- Alterar coluna foto para TEXT (suporta base64 grande)
 ALTER TABLE usuario MODIFY COLUMN foto TEXT;
+
+UPDATE usuario SET senha = 'b578dc5fcbfabbc7e96400601d0858c951f04929faef033bbbc117ab935c6ae9' 
+WHERE email = 'enzo@email.com';
+
+UPDATE usuario SET senha = 'b578dc5fcbfabbc7e96400601d0858c951f04929faef033bbbc117ab935c6ae9' 
+WHERE email = 'roberto.enfermeiro@email.com';
