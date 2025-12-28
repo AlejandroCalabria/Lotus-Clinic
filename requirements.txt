@@ -1,0 +1,10 @@
+Flask
+flask-cors
+mysql-connector-python
+pandas
+reportlab
+python-dotenv
+scikit-learn
+gunicorn
+requests
+gdown

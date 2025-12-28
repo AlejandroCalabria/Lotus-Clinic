@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Médico - Lotus Clinic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --lotus-primary: #237261;
+            --lotus-secondary: #3da995;
+            --lotus-accent: #5bc1ac;
+            --lotus-light: #e8f5f3;
+            --lotus-dark: #44525d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e8f5f3 0%, #f5f5f5 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--lotus-primary) 0%, var(--lotus-secondary) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .btn-voltar {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-voltar:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+            transform: translateY(-50%) translateX(-3px);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Form Content */
+        .form-content {
+            padding: 40px 40px 40px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            color: var(--lotus-dark);
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        label i {
+            color: var(--lotus-accent);
+            font-size: 16px;
+        }
+
+        input, select, textarea {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--lotus-accent);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(91, 193, 172, 0.1);
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%233da995' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px;
+        }
+
+        /* Textarea Grande */
+        .relatorio-textarea {
+            min-height: 400px;
+            resize: vertical;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        /* Seção Paciente */
+        .paciente-section {
+            background: var(--lotus-light);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .paciente-section h3 {
+            color: var(--lotus-primary);
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Botão PDF */
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--lotus-primary) 0%, var(--lotus-secondary) 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(35, 114, 97, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(35, 114, 97, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--lotus-primary);
+            border: 2px solid var(--lotus-accent);
+        }
+
+        .btn-secondary:hover {
+            background: var(--lotus-light);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-content {
+                padding: 30px 20px 30px;
+            }
+
+            .btn-voltar {
+                position: relative;
+                left: 0;
+                top: 0;
+                transform: none;
+                margin-bottom: 15px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .btn-container {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Alert */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .alert.show {
+            display: flex;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <button class="btn-voltar" onclick="voltarPerfil()">
+                <i class="bi bi-arrow-left"></i>
+                Voltar ao Perfil
+            </button>
+            <h1>Relatório Médico</h1>
+            <p>Lotus Clinic - Sistema de Documentação Clínica</p>
+        </div>
+
+        <!-- Form Content -->
+        <div class="form-content">
+            <div class="alert alert-success" id="successAlert">
+                <i class="bi bi-check-circle"></i>
+                <span>Relatório salvo com sucesso!</span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <i class="bi bi-exclamation-circle"></i>
+                <span id="errorMessage">Erro ao salvar relatório</span>
+            </div>
+
+            <form id="relatorioForm">
+                <!-- Informações Básicas -->
+                <div class="info-grid">
+                    <div class="form-group">
+                        <label>
+                            <i class="bi bi-hospital"></i>
+                            Especialidade
+                        </label>
+                        <select id="especialidade" required>
+                            <option value="">Selecione a especialidade</option>
+                            <option value="Cardiologia">Cardiologia</option>
+                            <option value="Dermatologia">Dermatologia</option>
+                            <option value="Endocrinologia">Endocrinologia</option>
+                            <option value="Gastroenterologia">Gastroenterologia</option>
+                            <option value="Ginecologia">Ginecologia</option>
+                            <option value="Neurologia">Neurologia</option>
+                            <option value="Oftalmologia">Oftalmologia</option>
+                            <option value="Ortopedia">Ortopedia</option>
+                            <option value="Pediatria">Pediatria</option>
+                            <option value="Psiquiatria">Psiquiatria</option>
+                            <option value="Clínica Geral">Clínica Geral</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="bi bi-clipboard-check"></i>
+                            Tipo de Consulta
+                        </label>
+                        <select id="tipoConsulta" required>
+                            <option value="">Selecione o tipo</option>
+                            <option value="Primeira Consulta">Primeira Consulta</option>
+                            <option value="Retorno">Retorno</option>
+                            <option value="Consulta de Urgência">Consulta de Urgência</option>
+                            <option value="Consulta Pré-Operatória">Consulta Pré-Operatória</option>
+                            <option value="Consulta Pós-Operatória">Consulta Pós-Operatória</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="bi bi-person-badge"></i>
+                            Médico Responsável
+                        </label>
+                        <input type="text" id="nomeMedico" placeholder="Dr(a). Nome Completo" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="bi bi-calendar-event"></i>
+                            Data da Consulta
+                        </label>
+                        <input type="date" id="dataConsulta" required>
+                    </div>
+                </div>
+
+                <!-- Relatório Detalhado -->
+                <div class="form-group full-width">
+                    <label>
+                        <i class="bi bi-file-text"></i>
+                        Relatório Detalhado da Consulta
+                    </label>
+                    <textarea 
+                        id="relatorio" 
+                        class="relatorio-textarea" 
+                        placeholder="Descreva detalhadamente:&#10;&#10;• Anamnese (história clínica do paciente)&#10;• Sintomas relatados&#10;• Exame físico realizado&#10;• Hipóteses diagnósticas&#10;• Exames solicitados&#10;• Prescrição médica&#10;• Orientações ao paciente&#10;• Conduta e acompanhamento"
+                        required
+                    ></textarea>
+                </div>
+
+                <!-- Informações do Paciente -->
+                <div class="paciente-section">
+                    <h3>
+                        <i class="bi bi-person-heart"></i>
+                        Dados do Paciente
+                    </h3>
+                    <div class="info-grid">
+                        <div class="form-group">
+                            <label>
+                                <i class="bi bi-person"></i>
+                                Nome Completo do Paciente
+                            </label>
+                            <input type="text" id="nomePaciente" placeholder="Nome completo" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="bi bi-calendar3"></i>
+                                Data de Nascimento
+                            </label>
+                            <input type="date" id="dataNascimento">
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="bi bi-card-text"></i>
+                                CPF
+                            </label>
+                            <input type="text" id="cpfPaciente" placeholder="000.000.000-00" maxlength="14">
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="bi bi-telephone"></i>
+                                Telefone
+                            </label>
+                            <input type="tel" id="telefonePaciente" placeholder="(00) 00000-0000">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="btn-container">
+                    <button type="button" class="btn btn-secondary" onclick="limparFormulario()">
+                        <i class="bi bi-x-circle"></i>
+                        Limpar Formulário
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="gerarPdfBtn">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                        Gerar Relatório PDF
+                        <div class="spinner" id="spinner"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Definir data atual como padrão
+        document.getElementById('dataConsulta').valueAsDate = new Date();
+
+        // Função para voltar ao perfil do médico
+        function voltarPerfil() {
+            if (confirm('Deseja realmente sair? Alterações não salvas serão perdidas.')) {
+                window.location.href = '/perfil-medico';
+            }
+        }
+
+        // Máscara para CPF
+        document.getElementById('cpfPaciente').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 11) {
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                e.target.value = value;
+            }
+        });
+
+        // Máscara para Telefone
+        document.getElementById('telefonePaciente').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 11) {
+                value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+                value = value.replace(/(\d)(\d{4})$/, '$1-$2');
+                e.target.value = value;
+            }
+        });
+
+        // Função para limpar formulário
+        function limparFormulario() {
+            if (confirm('Tem certeza que deseja limpar todos os campos?')) {
+                document.getElementById('relatorioForm').reset();
+                document.getElementById('dataConsulta').valueAsDate = new Date();
+            }
+        }
+
+        // Função para mostrar alerta
+        function showAlert(type, message) {
+            const successAlert = document.getElementById('successAlert');
+            const errorAlert = document.getElementById('errorAlert');
+            
+            successAlert.classList.remove('show');
+            errorAlert.classList.remove('show');
+            
+            if (type === 'success') {
+                successAlert.classList.add('show');
+                setTimeout(() => successAlert.classList.remove('show'), 3000);
+            } else {
+                document.getElementById('errorMessage').textContent = message;
+                errorAlert.classList.add('show');
+                setTimeout(() => errorAlert.classList.remove('show'), 4000);
+            }
+        }
+
+        // Submit do formulário
+        document.getElementById('relatorioForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('gerarPdfBtn');
+            const spinner = document.getElementById('spinner');
+            
+            // Coleta dos dados
+            const dados = {
+                especialidade: document.getElementById('especialidade').value,
+                tipoConsulta: document.getElementById('tipoConsulta').value,
+                nomeMedico: document.getElementById('nomeMedico').value,
+                dataConsulta: document.getElementById('dataConsulta').value,
+                relatorio: document.getElementById('relatorio').value,
+                nomePaciente: document.getElementById('nomePaciente').value,
+                dataNascimento: document.getElementById('dataNascimento').value,
+                cpfPaciente: document.getElementById('cpfPaciente').value,
+                telefonePaciente: document.getElementById('telefonePaciente').value
+            };
+            
+            // Mostrar loading
+            btn.disabled = true;
+            spinner.style.display = 'block';
+            
+            try {
+                // Simulação de envio para API
+                // Substitua pelo seu endpoint real
+                const response = await fetch('/api/gerar-relatorio-pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dados)
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Relatorio_${dados.nomePaciente.replace(/\s/g, '_')}_${dados.dataConsulta}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    showAlert('success');
+                } else {
+                    throw new Error('Erro ao gerar PDF');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('error', 'Erro ao gerar relatório. Tente novamente.');
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

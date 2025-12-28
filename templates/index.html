@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Clínica Lotus</title>
+
+    <!-- CSS FILES -->
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="../static/css/bootstrap-icons.css" rel="stylesheet">
+
+    <link rel="icon" type="image/x-icon" href="../static/images/Lotus.png">
+
+    <link href="../static/css/templatemo-kind-heart-charity.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loading.css') }}">
+
+    
+    <!--
+    
+TemplateMo 581 Kind Heart Charity
+
+https://templatemo.com/tm-581-kind-heart-charity
+
+-->
+    <style>
+        .dropdown-menu {
+            min-width: 220px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .dropdown-item {
+            padding: 10px 20px;
+            transition: background 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background: #f0f7ff;
+            color: #237261;
+        }
+
+        .dropdown-divider {
+            margin: 5px 0;
+        }
+        .dropdown-header {
+            background: linear-gradient(135deg, #237261 0%, #10493d 100%);
+            color: white !important;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 5px 5px 0 0;
+            margin: -8px -8px 0 -8px;
+            text-align: center;
+        }
+        .dropdown-menu {
+    min-width: 250px !important; /* Aumenta largura mínima */
+    max-width: 320px; /* Define largura máxima */
+    white-space: normal !important; /* Permite quebra de linha */
+}
+
+.dropdown-item {
+    white-space: normal !important; /* Permite quebra de linha nos itens */
+    word-wrap: break-word; /* Quebra palavras longas */
+    padding: 12px 20px !important; /* Aumenta padding para respirar */
+    line-height: 1.4; /* Melhora espaçamento entre linhas */
+}
+
+.dropdown-item i {
+    flex-shrink: 0; /* Impede ícone de encolher */
+    margin-right: 10px; /* Espaço após ícone */
+}
+
+.dropdown-header {
+    white-space: normal !important; /* Permite quebra no header */
+    word-wrap: break-word;
+    padding: 12px 20px !important;
+}
+
+/* Ajuste do toggle (botão que abre dropdown) */
+.nav-link.dropdown-toggle {
+    max-width: 220px; /* Evita que o nome fique muito largo */
+}
+
+.nav-link.dropdown-toggle span {
+    overflow: hidden;
+    text-overflow: ellipsis; /* ... se nome muito longo */
+    white-space: nowrap;
+    max-width: 150px; /* Limita largura do nome */
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Responsivo - mobile */
+@media (max-width: 768px) {
+    .dropdown-menu {
+        min-width: 280px !important;
+        max-width: 90vw; /* 90% da largura da tela */
+    }
+}
+    </style>
+</head>
+
+<body id="section_1">
+    <header class="site-header">
+        <div class="container">
+            <div class="row">
+
+                <div class="col-lg-8 col-12 d-flex flex-wrap">
+                    <p class="d-flex me-4 mb-0">
+                        <i class="bi-geo-alt me-2"></i>
+                        Rua Mariano Procópio, 37
+                    </p>
+
+                    <p class="d-flex mb-0">
+                        <i class="bi-envelope me-2"></i>
+
+                        <a href="mailto:info@company.com">
+                            contato@lotusclinic.com
+                        </a>
+                    </p>
+                </div>
+
+                <div class="col-lg-3 col-12 ms-auto d-lg-block d-none">
+                    <ul class="social-icon">
+                        <li class="social-icon-item">
+                            <a href="#" class="social-icon-link bi-twitter"></a>
+                        </li>
+
+                        <li class="social-icon-item">
+                            <a href="#" class="social-icon-link bi-facebook"></a>
+                        </li>
+
+                        <li class="social-icon-item">
+                            <a href="#" class="social-icon-link bi-instagram"></a>
+                        </li>
+
+                        <li class="social-icon-item">
+                            <a href="#" class="social-icon-link bi-youtube"></a>
+                        </li>
+
+                        <li class="social-icon-item">
+                            <a href="#" class="social-icon-link bi-whatsapp"></a>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <nav class="navbar navbar-expand-lg bg-light shadow-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/index">
+                <img src="../static/images/Lotus.png" class="logo img-fluid" alt="Kind Heart Charity">
+                <span class="simonetta-regular">
+                    Lotus
+                    <small class="simonetta-black">Private medical clinic</small>
+                </span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link click-scroll" href="/index">Inicio</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link click-scroll" href="/index#section_2">Sobre</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link click-scroll" href="/index#section_3">Agende</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link click-scroll" href="/index#section_6">Contato</a>
+                    </li>
+
+                    <!-- ✅ NAVBAR DINÂMICO -->
+                    {% if user %}
+                    <li class="nav-item dropdown ms-3">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown"
+                            role="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 5px 10px;">
+                            <img src="{{ user.foto }}" alt="Perfil"
+                                style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #237261;"
+                                onerror="this.src='/static/images/default-avatar-image.jpg'">
+                            <span style="margin-left: 10px; font-weight: 600; color: #237261;">{{ user.Nome_user
+                                }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            {% if user.cod_cargo == 'C005' %}
+                            <!-- ✅ DESENVOLVEDOR - Acesso Total -->
+                            <li class="dropdown-header" style="color: #155724; font-weight: 700;">
+                                🔧 Modo Desenvolvedor
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/admin">
+                                    <i class="bi bi-heart-pulse me-2"></i>Ambiente Administrativo
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/perfil-enfermeiro">
+                                    <i class="bi bi-heart-pulse me-2"></i>Ambiente Enfermeiro
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/perfil-atendente">
+                                    <i class="bi bi-person-badge me-2"></i>Ambiente Atendente
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/perfil-medico">
+                                    <i class="bi bi-hospital me-2"></i>Ambiente Médico
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/perfil-paciente">
+                                    <i class="bi bi-person-circle me-2"></i>Ambiente Paciente
+                                </a>
+                            </li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item" href="/triagem">
+                                    <i class="bi bi-robot me-2"></i>Sistema Triagem IA
+                                </a>
+                            </li>
+
+                            {% elif user.cod_cargo in ['C001', 'C003', 'C006'] %}
+                            <!-- Médico, Atendente ou Enfermeiro -->
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{% if user.cod_cargo == 'C001' %}/perfil-medico{% elif user.cod_cargo == 'C003' %}/perfil-atendente{% else %}/perfil-enfermeiro{% endif %}">
+                                    <i class="bi bi-briefcase me-2"></i>Área de Trabalho
+                                </a>
+                            </li>
+
+                            {% elif user.cod_cargo == 'C002' %}
+                            <!-- Paciente -->
+                            <li>
+                                <a class="dropdown-item" href="/perfil-paciente">
+                                    <i class="bi bi-calendar-plus me-2"></i>Agendar Consulta
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item" href="/settings">
+                                    <i class="bi bi-gear me-2"></i>Configurações
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item" href="/api/logout" onclick="fazerLogout(event)">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Sair
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <!-- Usuário NÃO logado -->
+                    <li class="nav-item ms-3">
+                        <a class="nav-link custom-btn custom-border-btn btn" href="/login">Entrar</a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+
+        <section class="hero-section hero-section-full-height">
+            <div class="container-fluid">
+                <div class="row">
+
+                    <div class="col-lg-12 col-12 p-0">
+                        <div id="hero-slide" class="carousel carousel-fade slide" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                <div class="carousel-item active">
+                                    <img src="../static/images/slide/stick.png" class="carousel-image img-fluid"
+                                        alt="...">
+
+                                    <div class="carousel-caption d-flex flex-column justify-content-end">
+
+                                    </div>
+                                </div>
+
+                                <div class="carousel-item">
+                                    <img src="../static/images/slide/sticka.png" class="carousel-image img-fluid"
+                                        alt="...">
+
+                                    <div class="carousel-caption d-flex flex-column justify-content-end">
+
+                                    </div>
+                                </div>
+
+                                <div class="carousel-item">
+                                    <img src="../static/images/slide/stickada.png" class="carousel-image img-fluid"
+                                        alt="...">
+
+                                    <div class="carousel-caption d-flex flex-column justify-content-end">
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button class="carousel-control-prev" type="button" data-bs-target="#hero-slide"
+                                data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+
+                            <button class="carousel-control-next" type="button" data-bs-target="#hero-slide"
+                                data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+
+        <section class="section-padding2">
+            <div class="container">
+                <div class="row">
+
+                    <div class="col-lg-10 col-12 text-center mx-auto">
+                        <h3 class="mb-5">Bem vindo à Clinica Lotus</h3>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 col-12 mb-4 mb-lg-0">
+                        <div class="featured-block d-flex justify-content-center align-items-center">
+                            <a href="donate.html" class="d-block">
+                                <img src="../static/images/icons/hands.png" class="featured-block-image img-fluid"
+                                    alt="">
+
+                                <p class="featured-block-text">saúde<strong> especializada</strong></p>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 col-12 mb-4 mb-lg-0 mb-md-4">
+                        <div class="featured-block d-flex justify-content-center align-items-center">
+                            <a href="donate.html" class="d-block">
+                                <img src="../static/images/icons/heart.png" class="featured-block-image img-fluid"
+                                    alt="">
+
+                                <p class="featured-block-text"><strong>Ajudamos </strong>o mundo</p>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 col-12 mb-4 mb-lg-0 mb-md-4">
+                        <div class="featured-block d-flex justify-content-center align-items-center">
+                            <a href="donate.html" class="d-block">
+                                <img src="../static/images/icons/receive.png" class="featured-block-image img-fluid"
+                                    alt="">
+
+                                <p class="featured-block-text">Cuidamos de <strong>Você</strong></p>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 col-12 mb-4 mb-lg-0">
+                        <div class="featured-block d-flex justify-content-center align-items-center">
+                            <a href="donate.html" class="d-block">
+                                <img src="../static/images/icons/scholarship.png" class="featured-block-image img-fluid"
+                                    alt="">
+
+                                <p class="featured-block-text"><strong>Experiência</strong> e luta</p>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section class="section-padding section-bg" id="section_2">
+            <div class="container">
+                <div class="row">
+
+                    <div class="col-lg-6 col-12 mb-5 mb-lg-0">
+                        <img src="../static/images/group-people-volunteering-foodbank-poor-people.jpg"
+                            class="custom-text-box-image img-fluid" alt="">
+                    </div>
+
+                    <div class="col-lg-6 col-12">
+                        <div class="custom-text-box">
+                            <h2 class="mb-2">Nossa História</h2>
+
+                            <h5 class="mb-3">A instituição Médica que preza por sua saúde</h5>
+
+                            <p class="mb-0">A Lotus Clinic nasceu da visão de criar um espaço médico onde a ciência se
+                                encontra com a serenidade. Nossa jornada é guiada pelo cuidado, pela confiança e pelo
+                                compromisso de promover o bem-estar.</p>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6 col-12">
+                                <div class="custom-text-box mb-lg-0">
+                                    <h5 class="mb-3">Nossa Missão</h5>
+
+                                    <p>oferecer atendimento médico de alta qualidade em um ambiente tranquilo</p>
+
+                                    <ul class="custom-list mt-2">
+                                        <li class="custom-list-item d-flex">
+                                            <i class="bi-check custom-text-box-icon me-2"></i>
+                                            Amor e segurança
+                                        </li>
+
+                                        <li class="custom-list-item d-flex">
+                                            <i class="bi-check custom-text-box-icon me-2"></i>
+                                            ambiente que tranquiliza
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-12">
+                                <div class="custom-text-box d-flex flex-wrap d-lg-block mb-lg-0">
+                                    <div class="counter-thumb">
+                                        <div class="d-flex">
+                                            <span class="counter-number" data-from="1" data-to="2009"
+                                                data-speed="1000"></span>
+                                            <span class="counter-number-text"></span>
+                                        </div>
+
+                                        <span class="counter-text">Fundada</span>
+                                    </div>
+
+                                    <div class="counter-thumb mt-4">
+                                        <div class="d-flex">
+                                            <span class="counter-number" data-from="1" data-to="12"
+                                                data-speed="1000"></span>
+                                            <span class="counter-number-text">K</span>
+                                        </div>
+
+                                        <span class="counter-text">Consulta realizadas</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+
+        <section class="about-section section-padding">
+            <div class="container">
+                <div class="row">
+
+                    <div class="col-lg-6 col-md-5 col-12">
+                        <img src="../static/images/slide/ceo.png"
+                            class="stickadassa about-image ms-lg-auto bg-light shadow-lg img-fluid" alt="">
+                    </div>
+
+                    <div class="col-lg-5 col-md-7 col-12">
+                        <div class="custom-text-block">
+                            <h2 class="mb-0">Ellis Walter</h2>
+
+                            <p class="text-muted mb-lg-4 mb-md-4">Fundadora e médica</p>
+
+                            <p>Ellis foi a primeira profissional da saúde a dar iniciativa no projeto Clinical Lotus</p>
+
+                            <p>"Todas as vidas que eu já salvei são o suficiente para me manter de pé" <small><b> afirma
+                                        a fundadora Ellis em sua entrevista</b></small></p>
+
+                            <ul class="social-icon mt-4">
+                                <li class="social-icon-item">
+                                    <a href="#" class="social-icon-link bi-twitter"></a>
+                                </li>
+
+                                <li class="social-icon-item">
+                                    <a href="#" class="social-icon-link bi-facebook"></a>
+                                </li>
+
+                                <li class="social-icon-item">
+                                    <a href="#" class="social-icon-link bi-instagram"></a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+
+        <section class="testimonial-section section-padding section-bg">
+            <div class="container">
+                <div class="row">
+
+                    <div class="col-lg-8 col-12 mx-auto">
+                        <h2 class="mb-lg-3">Pacientes satisfeitos</h2>
+
+                        <div id="testimonial-carousel" class="carousel carousel-fade slide" data-bs-ride="carousel">
+
+                            <div class="carousel-inner">
+                                <div class="carousel-item active">
+                                    <div class="carousel-caption">
+                                        <h4 class="carousel-title">Minha mãe esteve internada na clínica por conta de um
+                                            câncer. Os médicos a trataram com tanto carinho que pareciam ser da família
+                                        </h4>
+
+                                        <small class="carousel-name"><span class="carousel-name-title">Maria
+                                                Clara</span></small>
+                                    </div>
+                                </div>
+
+                                <div class="carousel-item">
+                                    <div class="carousel-caption">
+                                        <h4 class="carousel-title">A equipe especializada da Lotus ajudou muito no meu
+                                            tratamento contra a malária. Me sinto ótimo!</h4>
+
+                                        <small class="carousel-name"><span class="carousel-name-title">Thomas
+                                                Jefferson</span></small>
+                                    </div>
+                                </div>
+
+                                <div class="carousel-item">
+                                    <div class="carousel-caption">
+                                        <h4 class="carousel-title">Fazem de tudo para confortar a família do paciente.
+                                            Ficaram ao nosso lado a todo momento</h4>
+
+                                        <small class="carousel-name"><span class="carousel-name-title">Janete
+                                                James</span></small>
+                                    </div>
+                                </div>
+
+                                <div class="carousel-item">
+                                    <div class="carousel-caption">
+                                        <h4 class="carousel-title">Os preços são acessíveis pelo carinho que entregam.
+                                        </h4>
+
+                                        <small class="carousel-name"><span class="carousel-name-title">Bob
+                                                Marley</span></small>
+                                    </div>
+                                </div>
+
+                                <ol class="carousel-indicators">
+                                    <li data-bs-target="#testimonial-carousel" data-bs-slide-to="0" class="active">
+                                        <img src="../static/images/avatar/portrait-beautiful-young-woman-standing-grey-wall.jpg"
+                                            class="img-fluid rounded-circle avatar-image" alt="avatar">
+                                    </li>
+
+                                    <li data-bs-target="#testimonial-carousel" data-bs-slide-to="1" class="">
+                                        <img src="../static/images/avatar/portrait-young-redhead-bearded-male.jpg"
+                                            class="img-fluid rounded-circle avatar-image" alt="avatar">
+                                    </li>
+
+                                    <li data-bs-target="#testimonial-carousel" data-bs-slide-to="2" class="">
+                                        <img src="../static/images/avatar/pretty-blonde-woman-wearing-white-t-shirt.jpg"
+                                            class="img-fluid rounded-circle avatar-image" alt="avatar">
+                                    </li>
+
+                                    <li data-bs-target="#testimonial-carousel" data-bs-slide-to="3" class="">
+                                        <img src="../static/images/avatar/studio-portrait-emotional-happy-funny.jpg"
+                                            class="img-fluid rounded-circle avatar-image" alt="avatar">
+                                    </li>
+                                </ol>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+
+        <section class="contact-section section-padding" id="section_6">
+            <div class="container">
+                <div class="row">
+
+                    <div class="col-lg-4 col-12 ms-auto mb-5 mb-lg-0">
+                        <div class="contact-info-wrap">
+                            <h2>Fale Conosco</h2>
+
+                            <div class="contact-image-wrap d-flex flex-wrap">
+                                <img src="../static/images/avatar/pretty-blonde-woman-wearing-white-t-shirt.jpg"
+                                    class="img-fluid avatar-image" alt="">
+
+                                <div class="d-flex flex-column justify-content-center ms-3">
+                                    <p class="mb-0">Clara Borscht</p>
+                                    <p class="mb-0"><strong>RH e Diretora</strong></p>
+                                </div>
+                            </div>
+
+                            <div class="contact-info">
+                                <h5 class="mb-3">Contate-nos</h5>
+
+                                <p class="d-flex mb-2">
+                                    <i class="bi-geo-alt me-2"></i>
+                                    Rua Mariano Procópio, 37
+                                </p>
+
+                                <p class="d-flex mb-2">
+                                    <i class="bi-telephone me-2"></i>
+
+                                    <a href="tel: 120-240-9600">
+                                        120-240-9600
+                                    </a>
+                                </p>
+
+                                <p class="d-flex">
+                                    <i class="bi-envelope me-2"></i>
+
+                                    <a href="mailto:info@yourgmail.com">
+                                        contato@lotusclinic.com
+                                    </a>
+                                </p>
+
+                                <button class="custom-btn btn mt-3" id="togglebutton">Localização</button>
+                                <iframe
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3675.2175986515354!2d-43.20646512380683!3d-22.905343537821164!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x997f1a9d0660f7%3A0x2a7d96bb48763fb7!2sR.%20Mariano%20Proc%C3%B3pio%2C%2037%20-%20Santo%20Cristo%2C%20Rio%20de%20Janeiro%20-%20RJ%2C%2020220-170!5e0!3m2!1spt-BR!2sbr!4v1763389377379!5m2!1spt-BR!2sbr"
+                                    allowfullscreen="" loading="lazy"
+                                    referrerpolicy="no-referrer-when-downgrade" class="iframe-hidden"
+                                    id="iframe"></iframe>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5 col-12 mx-auto">
+                        <form class="custom-form contact-form" action="#" method="post" role="form">
+                            <h2>Formulário de contato</h2>
+
+                            <p class="mb-4">Ou envie-nos um e-mail
+                                <a href="#">contato@lotusclinic.com</a>
+                            </p>
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <input type="text" name="first-name" id="first-name" class="form-control"
+                                        placeholder="Sasha" required>
+                                </div>
+
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <input type="text" name="last-name" id="last-name" class="form-control"
+                                        placeholder="Petrikova" required>
+                                </div>
+                            </div>
+
+                            <input type="email" name="email" id="email" pattern="[^ @]*@[^ @]*" class="form-control"
+                                placeholder="Sashapetri@gmail.com" required>
+
+                            <textarea name="message" rows="5" class="form-control" id="message"
+                                placeholder="Como podemos ajudar?"></textarea>
+
+                            <button type="submit" class="form-control">Enviar</button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-12 mb-4">
+                    <img src="../static/images/Lotus.png" class="logo img-fluid" alt="">
+                </div>
+
+                <div class="col-lg-4 col-md-6 col-12 mb-4">
+                    <h5 class="site-footer-title mb-3">Conteúdos</h5>
+
+                    <ul class="footer-menu">
+                        <li class="footer-menu-item"><a href="#" class="footer-menu-link">algum erro na página?</a></li>
+                        <li class="footer-menu-item"><a href="#" class="footer-menu-link">Sobre nós</a></li>
+                        <li class="footer-menu-item"><a href="#" class="footer-menu-link">agende sua consulta</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-4 col-md-6 col-12 mx-auto">
+                    <h5 class="site-footer-title mb-3">Informações de contato</h5>
+
+                    <p class="text-white d-flex mb-2">
+                        <i class="bi-geo-alt me-2"></i>
+                        Rua Mariano Procópio, 37 - Rio de Janeiro, RJ
+                    </p>
+
+                    <p class="text-white d-flex mb-2">
+                        <i class="bi-telephone me-2"></i>
+                        <a href="tel:21997925722" class="site-footer-link">
+                            (21) 9 9792-5722
+                        </a>
+                    </p>
+
+                    <p class="text-white d-flex">
+                        <i class="bi-envelope me-2"></i>
+                        <a href="mailto:contato@lotusclinic.com" class="site-footer-link">
+                            contato@lotusclinic.com
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="site-footer-bottom">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-6 col-md-7 col-12">
+                        <p class="copyright-text mb-0">Copyright © 2025 <a href="#">Lotus Clinic</a></p>
+                    </div>
+
+                    <div class="col-lg-6 col-md-5 col-12 d-flex justify-content-center align-items-center mx-auto">
+                        <ul class="social-icon">
+                            <li class="social-icon-item">
+                                <a href="#" class="social-icon-link bi-twitter"></a>
+                            </li>
+                            <li class="social-icon-item">
+                                <a href="#" class="social-icon-link bi-facebook"></a>
+                            </li>
+                            <li class="social-icon-item">
+                                <a href="#" class="social-icon-link bi-instagram"></a>
+                            </li>
+                            <li class="social-icon-item">
+                                <a href="#" class="social-icon-link bi-whatsapp"></a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT FILES -->
+    <script src="../static/js/jquery.min.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+    <script src="../static/js/jquery.sticky.js"></script>
+    <script src="../static/js/click-scroll.js"></script>
+    <script src="../static/js/counter.js"></script>
+    <script src="../static/js/custom.js"></script>
+    <script>
+        const toggleButton = document.getElementById('togglebutton');
+const iframe = document.getElementById('iframe');
+
+// Cria o overlay de fundo
+const overlay = document.createElement('div');
+overlay.id = 'iframe-overlay';
+overlay.style.cssText = `
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 9998;
+  display: none;
+`;
+document.body.appendChild(overlay);
+
+// Função para abrir o iframe
+function openIframe() {
+  iframe.classList.remove('iframe-hidden');
+  overlay.style.display = 'block';
+  document.body.style.overflow = 'hidden'; // Bloqueia scroll da página
+}
+
+// Função para fechar o iframe
+function closeIframe() {
+  iframe.classList.add('iframe-hidden');
+  overlay.style.display = 'none';
+  document.body.style.overflow = ''; // Restaura scroll
+}
+
+// Evento do botão
+toggleButton.addEventListener('click', () => {
+  if (iframe.classList.contains('iframe-hidden')) {
+    openIframe();
+  } else {
+    closeIframe();
+  }
+});
+
+// Fecha ao clicar no overlay
+overlay.addEventListener('click', closeIframe);
+
+// Fecha ao pressionar ESC
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !iframe.classList.contains('iframe-hidden')) {
+    closeIframe();
+  }
+});
+    </script>
+    <script>
+        async function fazerLogout(event) {
+            event.preventDefault();
+
+            if (!confirm('Deseja realmente sair?')) return;
+
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Logout realizado!');
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                alert('Erro ao fazer logout. Tente novamente.');
+            }
+        }
+    </script>
+    
+</body>
+
+</html>

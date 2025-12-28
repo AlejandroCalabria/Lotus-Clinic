@@ -1,0 +1,70 @@
+# Ambientes virtuais
+venv/
+*_venv/
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# Variáveis de ambiente
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# Banco de dados / dumps
+*.sql
+*.db
+
+# Uploads
+uploads/
+
+# Jupyter
+*.ipynb
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+
+# Modelos de ML
+*.pkl
+
+# Configuração específica de hospedagem
+.user.ini
+# Ambientes virtuais
+venv/
+*_venv/
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# Variáveis de ambiente
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# Banco de dados / dumps
+*.sql
+*.db
+
+# Uploads
+uploads/
+
+# Jupyter
+*.ipynb
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+
+# Modelos de ML
+*.pkl
+
+# Configuração específica de hospedagem
+.user.ini

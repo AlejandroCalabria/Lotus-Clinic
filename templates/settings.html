@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lotus Clinic - Configurações </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .settings-sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #2d5f5d 0%, #4a7c7a 100%);
+            color: white;
+            padding: 30px 0;
+            overflow-y: auto;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+        }
+
+        .settings-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 18px 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .settings-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-menu-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left-color: #5bc1ac;
+        }
+
+        .settings-menu-item i {
+            font-size: 20px;
+            width: 30px;
+        }
+
+        .settings-menu-item.danger {
+            color: #ff6b6b;
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* MAIN CONTENT */
+        .settings-main {
+            flex: 1;
+            margin-left: 250px;
+            background: white;
+            overflow-y: auto;
+        }
+
+        /* HEADER */
+        .settings-header {
+            background: linear-gradient(90deg, #5bc1ac 0%, #6dd4bd 100%);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-header h1 {
+            color: white;
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .settings-close-btn {
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            color: #5bc1ac;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .settings-close-btn:hover {
+            transform: rotate(90deg);
+        }
+
+        /* CONTENT */
+        .settings-content {
+            padding: 40px;
+            max-width: 900px;
+        }
+
+        .settings-section {
+            display: none;
+        }
+
+        .settings-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section-title {
+            color: #2d5f5d;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .section-subtitle {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        /* FORM STYLES */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #5bc1ac;
+            box-shadow: 0 0 0 3px rgba(91, 193, 172, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        /* SWITCHES */
+        .notification-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-label {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .notification-label strong {
+            color: #333;
+        }
+
+        .notification-label small {
+            color: #999;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 34px;
+            background: #ddd;
+            border-radius: 17px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border: none;
+            padding: 0;
+        }
+
+        .toggle-switch.active {
+            background: #5bc1ac;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 28px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2d5f5d 0%, #3a7775 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45, 95, 93, 0.3);
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* ALERTS */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        /* MODAL */
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirm-modal.active {
+            display: flex;
+        }
+
+        .confirm-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .confirm-content i {
+            font-size: 60px;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+        }
+
+        .confirm-content h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .confirm-content p {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .confirm-buttons button {
+            flex: 1;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .settings-sidebar {
+                width: 100%;
+                height: auto;
+                padding: 15px 0;
+                display: flex;
+                overflow-x: auto;
+                overflow-y: hidden;
+                position: relative;
+            }
+
+            .settings-main {
+                margin-left: 0;
+            }
+
+            .settings-menu-item {
+                padding: 12px 15px;
+                font-size: 12px;
+                white-space: nowrap;
+            }
+
+            .settings-content {
+                padding: 25px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="settings-sidebar">
+        <div class="settings-menu-item active" data-section="info">
+            <i class="bi bi-person"></i>
+            <span>Informações Pessoais</span>
+        </div>
+        <div class="settings-menu-item" data-section="security">
+            <i class="bi bi-lock"></i>
+            <span>Segurança</span>
+        </div>
+        <div class="settings-menu-item" data-section="notifications">
+            <i class="bi bi-bell"></i>
+            <span>Notificações</span>
+        </div>
+        <div class="settings-menu-item" data-section="support">
+            <i class="bi bi-chat-dots"></i>
+            <span>Suporte</span>
+        </div>
+        <div class="settings-menu-item danger" data-section="delete">
+            <i class="bi bi-trash"></i>
+            <span>Excluir Conta</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="settings-main">
+        <!-- Header -->
+        <div class="settings-header">
+            <h1>Configurações</h1>
+            <button class="settings-close-btn" onclick="window.history.back()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="settings-content">
+            <!-- Informações Pessoais -->
+            <div class="settings-section active" id="info-section">
+                <h2 class="section-title">Informações Pessoais</h2>
+                <p class="section-subtitle">Gerencie seus dados pessoais</p>
+
+                <div class="alert alert-success" id="infoSuccess">
+                    ✓ Dados atualizados com sucesso!
+                </div>
+
+                <form id="infoForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome Completo</label>
+                            <input type="text" name="nome" id="nome" placeholder="Seu nome" 
+                                   value="{{ usuario.Nome_user }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>E-mail</label>
+                            <input type="email" name="email" id="email" placeholder="seu@email.com" 
+                                   value="{{ usuario.email }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Telefone</label>
+                            <input type="tel" name="telefone" id="telefone" placeholder="(00) 99999-9999" 
+                                   value="{{ usuario.telefone }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Data de Nascimento</label>
+                            <input type="date" name="data_nasc" id="data_nasc" 
+                                   value="{{ usuario.data_nasc }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bio</label>
+                        <textarea name="bio" id="bio" placeholder="Conte um pouco sobre você"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check"></i> Salvar alterações
+                    </button>
+                </form>
+            </div>
+
+            <!-- Segurança -->
+            <div class="settings-section" id="security-section">
+                <h2 class="section-title">Segurança e Senha</h2>
+                <p class="section-subtitle">Altere sua senha e gerencie a segurança da sua conta</p>
+
+                <div class="alert alert-error" id="securityError"></div>
+                <div class="alert alert-success" id="securitySuccess">
+                    ✓ Senha alterada com sucesso!
+                </div>
+
+                <form id="securityForm">
+                    <div class="form-group">
+                        <label>Senha Atual</label>
+                        <input type="password" name="senha_atual" id="senha_atual" 
+                               placeholder="Digite sua senha atual" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nova Senha</label>
+                        <input type="password" name="nova_senha" id="nova_senha" 
+                               placeholder="Digite uma nova senha" required>
+                        <small style="color: #999; margin-top: 5px; display: block;">
+                            Mínimo 6 caracteres
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Confirmar Nova Senha</label>
+                        <input type="password" name="confirma_senha" id="confirma_senha" 
+                               placeholder="Confirme sua nova senha" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-shield-check"></i> Alterar senha
+                    </button>
+                </form>
+            </div>
+
+            <!-- Notificações -->
+            <div class="settings-section" id="notifications-section">
+                <h2 class="section-title">Notificações</h2>
+                <p class="section-subtitle">Controle como você recebe atualizações</p>
+
+                <div class="alert alert-success" id="notifSuccess">
+                    ✓ Preferências salvas com sucesso!
+                </div>
+
+                <form id="notificationsForm">
+                    <div class="notification-item">
+                        <div class="notification-label">
+                            <strong>Notificações por E-mail</strong>
+                            <small>Receba atualizações importantes por e-mail</small>
+                        </div>
+                        <button type="button" class="toggle-switch" data-toggle="emailNotif" id="toggle-email"></button>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="notification-label">
+                            <strong>Notificações por SMS/WhatsApp</strong>
+                            <small>Receba avisos urgentes por SMS ou WhatsApp</small>
+                        </div>
+                        <button type="button" class="toggle-switch" data-toggle="smsNotif" id="toggle-sms"></button>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="notification-label">
+                            <strong>Atualizações da Clínica</strong>
+                            <small>Fique atualizado sobre novos serviços e promoções</small>
+                        </div>
+                        <button type="button" class="toggle-switch" data-toggle="clinicNotif" id="toggle-clinic"></button>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="notification-label">
+                            <strong>Lembretes de Consultas</strong>
+                            <small>Receba lembretes antes de suas consultas</small>
+                        </div>
+                        <button type="button" class="toggle-switch" data-toggle="appointmentNotif" id="toggle-appointment"></button>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check"></i> Salvar preferências
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Suporte -->
+            <div class="settings-section" id="support-section">
+                <h2 class="section-title">Suporte</h2>
+                <p class="section-subtitle">Envie-nos uma mensagem com sua dúvida ou problema</p>
+
+                <div class="alert alert-success" id="supportSuccess">
+                    ✓ Mensagem enviada com sucesso! Responderemos em breve.
+                </div>
+
+                <form id="supportForm">
+                    <div class="form-group">
+                        <label>Assunto</label>
+                        <input type="text" name="assunto" id="assunto" 
+                               placeholder="Qual é o assunto da sua mensagem?" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mensagem</label>
+                        <textarea name="mensagem" id="mensagem" 
+                                  placeholder="Descreva seu problema ou dúvida com detalhes" 
+                                  required></textarea>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <strong style="color: #333;">Precisa de ajuda imediata?</strong>
+                        <p style="color: #666; margin-top: 10px;">
+                            Envie uma mensagem pelo WhatsApp: <strong>(21) 98765-4321</strong>
+                        </p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Enviar mensagem
+                    </button>
+                </form>
+            </div>
+
+            <!-- Excluir Conta -->
+            <div class="settings-section" id="delete-section">
+                <h2 class="section-title">Excluir Conta</h2>
+                <p class="section-subtitle">Essa ação é irreversível</p>
+
+                {% if not usuario.pode_excluir %}
+                <div class="alert alert-warning">
+                    <strong>⚠ Atenção!</strong> Você só pode excluir sua conta se não houver consultas marcadas. 
+                    Você ainda tem {{ usuario.consultas_futuras }} consulta(s) agendada(s).
+                </div>
+                {% endif %}
+
+                <p style="color: #666; line-height: 1.8; margin-bottom: 30px;">
+                    Ao excluir sua conta, todos os seus dados pessoais, histórico médico e agendamentos serão 
+                    permanentemente removidos do sistema. Esta ação não pode ser desfeita.
+                </p>
+
+                <button type="button" class="btn btn-danger" id="deleteAccountBtn" 
+                        {% if not usuario.pode_excluir %}disabled{% endif %}>
+                    <i class="bi bi-trash"></i> Excluir minha conta
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div class="confirm-modal" id="confirmModal">
+        <div class="confirm-content">
+            <i class="bi bi-exclamation-circle"></i>
+            <h3>Tem certeza?</h3>
+            <p>Essa ação é irreversível e todos os seus dados serão permanentemente deletados.</p>
+            <div class="confirm-buttons">
+                <button class="btn btn-secondary" id="confirmCancel">Cancelar</button>
+                <button class="btn btn-danger" id="confirmDelete">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== ELEMENTOS ==========
+        const menuItems = document.querySelectorAll('.settings-menu-item');
+        const sections = document.querySelectorAll('.settings-section');
+        const toggleSwitches = document.querySelectorAll('.toggle-switch');
+        const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmCancel = document.getElementById('confirmCancel');
+        const confirmDelete = document.getElementById('confirmDelete');
+
+        // ========== NAVEGAÇÃO ==========
+        menuItems.forEach(item => {
+            item.addEventListener('click', () => {
+                menuItems.forEach(m => m.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active'));
+                
+                item.classList.add('active');
+                const sectionId = item.dataset.section + '-section';
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+
+        // ========== TOGGLE SWITCHES ==========
+        toggleSwitches.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('active');
+            });
+        });
+
+        // ========== CARREGAR PREFERÊNCIAS DE NOTIFICAÇÕES ==========
+        async function carregarPreferencias() {
+            try {
+                const response = await fetch('/api/settings/notificacoes');
+                const data = await response.json();
+                
+                if (data.success && data.preferencias) {
+                    const prefs = data.preferencias;
+                    
+                    if (prefs.email_notif) document.getElementById('toggle-email').classList.add('active');
+                    if (prefs.sms_notif) document.getElementById('toggle-sms').classList.add('active');
+                    if (prefs.clinic_notif) document.getElementById('toggle-clinic').classList.add('active');
+                    if (prefs.appointment_notif) document.getElementById('toggle-appointment').classList.add('active');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar preferências:', error);
+            }
+        }
+
+        carregarPreferencias();
+
+        // ========== FORM: INFORMAÇÕES PESSOAIS ==========
+        document.getElementById('infoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                nome: document.getElementById('nome').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                telefone: document.getElementById('telefone').value.trim(),
+                data_nasc: document.getElementById('data_nasc').value,
+                bio: document.getElementById('bio').value.trim()
+            };
+            
+            try {
+                const response = await fetch('/api/settings/atualizar-info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('infoSuccess');
+                } else {
+                    alert('Erro: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar informações:', error);
+                alert('Erro ao atualizar informações. Tente novamente.');
+            }
+        });
+
+        // ========== FORM: SEGURANÇA ==========
+        document.getElementById('securityForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                senha_atual: document.getElementById('senha_atual').value,
+                nova_senha: document.getElementById('nova_senha').value,
+                confirma_senha: document.getElementById('confirma_senha').value
+            };
+            
+            try {
+                const response = await fetch('/api/settings/alterar-senha', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('securitySuccess');
+                    document.getElementById('securityForm').reset();
+                } else {
+                    const errorAlert = document.getElementById('securityError');
+                    errorAlert.textContent = '✗ ' + data.error;
+                    showAlert('securityError');
+                }
+            } catch (error) {
+                console.error('Erro ao alterar senha:', error);
+                alert('Erro ao alterar senha. Tente novamente.');
+            }
+        });
+
+        // ========== FORM: NOTIFICAÇÕES ==========
+        document.getElementById('notificationsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                email_notif: document.getElementById('toggle-email').classList.contains('active'),
+                sms_notif: document.getElementById('toggle-sms').classList.contains('active'),
+                clinic_notif: document.getElementById('toggle-clinic').classList.contains('active'),
+                appointment_notif: document.getElementById('toggle-appointment').classList.contains('active')
+            };
+            
+            try {
+                const response = await fetch('/api/settings/notificacoes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('notifSuccess');
+                } else {
+                    alert('Erro: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Erro ao salvar preferências:', error);
+                alert('Erro ao salvar preferências. Tente novamente.');
+            }
+        });
+
+        // ========== FORM: SUPORTE ==========
+        document.getElementById('supportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                assunto: document.getElementById('assunto').value.trim(),
+                mensagem: document.getElementById('mensagem').value.trim()
+            };
+            
+            try {
+                const response = await fetch('/api/settings/enviar-suporte', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('supportSuccess');
+                    document.getElementById('supportForm').reset();
+                } else {
+                    alert('Erro: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error);
+                alert('Erro ao enviar mensagem. Tente novamente.');
+            }
+        });
+
+        // ========== EXCLUIR CONTA ==========
+        deleteAccountBtn.addEventListener('click', () => {
+            confirmModal.classList.add('active');
+        });
+
+        confirmCancel.addEventListener('click', () => {
+            confirmModal.classList.remove('active');
+        });
+
+        confirmDelete.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/settings/excluir-conta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Conta excluída com sucesso!');
+                    window.location.href = '/';
+                } else {
+                    alert('Erro: ' + data.error);
+                    confirmModal.classList.remove('active');
+                }
+            } catch (error) {
+                console.error('Erro ao excluir conta:', error);
+                alert('Erro ao excluir conta. Tente novamente.');
+            }
+        });
+
+        // ========== FUNÇÃO AUXILIAR ==========
+        function showAlert(alertId) {
+            const alert = document.getElementById(alertId);
+            alert.classList.add('show');
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
